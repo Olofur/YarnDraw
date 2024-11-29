@@ -4,15 +4,18 @@ import java.io.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
 
 import java.util.HashMap;
 
 public class Palette extends JPanel{
-    private JPanel palettePanel;
-    private HashMap<Color, SymbolString> colorSymbols;
+    private static HashMap<Color, ColorSymbol> colorSymbols;
+    private static JPanel palettePanel;
     private static JTextField colorField;
 
     private static Color activeColor;
+    private static BufferedImage activeSymbol;
+
     private static Color backgroundColor;
     private static Color borderColor;
 
@@ -30,6 +33,20 @@ public class Palette extends JPanel{
         // Subpanel of all added colors
         palettePanel = new JPanel();
         palettePanel.setLayout(new GridLayout(0, 3));
+        palettePanel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                int x = e.getX();
+                int y = e.getY();
+                for (int i = 0; i < palettePanel.getComponentCount(); i++) {
+                    ColorPanel panel = (ColorPanel) palettePanel.getComponent(i);
+                    if (panel.getBounds().contains(x, y)) {
+                        setActiveColor(panel.getColor());
+                        setActiveSymbol(panel.getSymbol());
+                    }
+                }
+            }
+        });
 
         // List of all added colors and symbols
         colorSymbols = new HashMap<>();
@@ -38,9 +55,12 @@ public class Palette extends JPanel{
         colorField = new JTextField(25);
         add(colorField);
 
-        // Initialize buttons
-        addButton();
-        removeButton();
+        // Initialize add and remove buttons
+        add(addButton());
+        add(removeButton());
+
+        // Initialize palette
+        add(palettePanel);
 
         // Initialize stack
         stack = new SvgStack();
@@ -48,11 +68,11 @@ public class Palette extends JPanel{
         initializeStack();
 
         // Add background color to palette
-        colorSymbols.put(backgroundColor,new SymbolString(null, "None"));
+        colorSymbols.put(backgroundColor, new ColorSymbol(null, "None"));
         updatePalette();
     }
 
-    public void addButton() {
+    public JButton addButton() {
         JButton Button = new JButton("Add Color");
         Button.setPreferredSize(new Dimension(136, 20));
         Button.addActionListener(new ActionListener() {
@@ -63,21 +83,20 @@ public class Palette extends JPanel{
                     Color color = Color.decode(colorString);
                     if (!colorSymbols.keySet().contains(color)) {
                         String item = stack.popItem();
-                        Image symbol = manager.getImage(item);
-    
-                        colorSymbols.put(color, new SymbolString(symbol, item));
+                        BufferedImage symbol = manager.getImage(item);
+                        colorSymbols.put(color, new ColorSymbol(symbol, item));
                         updatePalette();
                         }
                 } catch (NumberFormatException ex) {
                     JOptionPane.showMessageDialog(null, "Invalid color code");
                 }
-                System.out.println(colorSymbols.size());
+                System.out.println("Number of colors: " + colorSymbols.size());
             }
         });
-        add(Button);
+        return Button;
     }
 
-    public void removeButton() {
+    public JButton removeButton() {
         JButton Button = new JButton("Remove Color");
         Button.setPreferredSize(new Dimension(136, 20));
         Button.addActionListener(new ActionListener() {
@@ -88,7 +107,7 @@ public class Palette extends JPanel{
                     try {
                         Color color = Color.decode(colorString);
                         // Add symbol back to stack
-                        String symbolName = colorSymbols.get(color).getSymbolName();
+                        String symbolName = colorSymbols.get(color).symbolName();
                         stack.addItem(symbolName);
                         colorSymbols.remove(color);
                         updatePalette();
@@ -96,23 +115,24 @@ public class Palette extends JPanel{
                         JOptionPane.showMessageDialog(null, "Invalid color code");
                     }
                 }
-                System.out.println(colorSymbols.size());
+                System.out.println("Number of colors: " + colorSymbols.size());
             }
         });
-        add(Button);
+        return Button;
     }
 
-    public void colorButton(Color color) {
-        JButton Button = new JButton();
-        Button.setBackground(color);
+    public static ColorPanel colorButton(Color color) {
+        ColorPanel Button = new ColorPanel();
+        if (ControlPanel.showColor()) {
+            Button.setColor(color);
+        } else {
+            Button.setColor(backgroundColor);
+        }
+        if (ControlPanel.showSymbol()) {
+            Button.setSymbol(colorSymbols.get(color).symbol());
+        }
         Button.setPreferredSize(new Dimension(100, 50));
-        Button.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                setActiveColor(color);
-            }
-        });
-        palettePanel.add(Button);
+        return Button;
     }
 
     private void initializeStack() {
@@ -127,22 +147,34 @@ public class Palette extends JPanel{
         }
     }
 
-    private void updatePalette() {
+    public static void updatePalette() {
+        // Do not remuve all, instead see what has changed and update only that
         palettePanel.removeAll();
         for (Color color : colorSymbols.keySet()) {
-            colorButton(color);
+            ColorPanel button = colorButton(color);
+            button.setBorder(BorderFactory.createLineBorder(getBorderColor()));
+            palettePanel.add(button);
         }
-        add(palettePanel);
         palettePanel.revalidate();
         palettePanel.repaint();
     }
 
     public static void setActiveColor(Color color) {
         activeColor = color;
+        System.out.println("Active color changed to: " + activeColor);
     }
 
     public static Color getActiveColor() {
         return activeColor;
+    }
+
+    public static void setActiveSymbol(BufferedImage symbol) {
+        activeSymbol = symbol;
+        System.out.println("Active symbol changed");
+    }
+
+    public static BufferedImage getActiveSymbol() {
+        return activeSymbol;
     }
 
     public static Color getBackgroundColor() {

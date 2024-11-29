@@ -13,7 +13,6 @@ public class MainFrame {
 
         JSplitPane mainPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         JSplitPane menuPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-
         JSplitPane optionPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 
         // Create grid panel
