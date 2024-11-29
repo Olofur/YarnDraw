@@ -6,14 +6,20 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseMotionAdapter;
+import java.awt.image.BufferedImage;
+
+import java.util.HashMap;
 
 public class ClickableGridPanel extends JPanel {
     private int zoomLevel = 1;
     private int previousZoomLevel = 1;
     private int zoomMax = 20;
 
-    private JPanel[][] gridPanels;
-    //private Color[][] grid;
+    private static ColorPanel[][] gridPanels;
+
+    // Generate integer keys for the symbolmap, which the grid values are mapped to
+    private int[][] gridValues;
+    private HashMap<Integer, ColorSymbol> symbolMap; 
 
     private int gridX;
     private int gridY;
@@ -23,17 +29,9 @@ public class ClickableGridPanel extends JPanel {
         gridY = y;
 
         setLayout(new GridLayout(gridX, gridY));
-        gridPanels = new JPanel[gridX][gridY];
+        gridPanels = new ColorPanel[gridX][gridY];
 
-        for (int i = 0; i < gridX; i++) {
-            for (int j = 0; j < gridY; j++) {
-                gridPanels[i][j] = new JPanel();
-                gridPanels[i][j].setBackground(Palette.getBackgroundColor());
-                gridPanels[i][j].setPreferredSize(new Dimension(10 * zoomLevel, 10 * zoomLevel));
-                gridPanels[i][j].setBorder(BorderFactory.createLineBorder(Palette.getBorderColor()));
-                add(gridPanels[i][j]);
-            }
-        }
+        initializeGrid();
 
         addMouseMotionListener(new MouseMotionAdapter() {
             public void mouseDragged(MouseEvent e) {
@@ -41,12 +39,15 @@ public class ClickableGridPanel extends JPanel {
                 int y = e.getY();
                 for (int i = 0; i < gridX; i++) {
                     for (int j = 0; j < gridY; j++) {
-                        JPanel panel = gridPanels[i][j];
+                        ColorPanel panel = gridPanels[i][j];
                         if (panel.getBounds().contains(x, y)) {
                             Color activeColor = Palette.getActiveColor();
-                            if (panel.getBackground() != activeColor) {
-                                panel.setBackground(activeColor);
-                                // panel.setSymbol()();
+                            BufferedImage activeSymbol = Palette.getActiveSymbol();
+                            if (panel.getColor() != activeColor) {
+                                panel.setColor(activeColor);
+                                panel.setSymbol(activeSymbol);
+                                panel.revalidate();
+                                panel.repaint();
                             }
                         }
                     }
@@ -61,25 +62,28 @@ public class ClickableGridPanel extends JPanel {
                 int y = e.getY();
                 for (int i = 0; i < gridX; i++) {
                     for (int j = 0; j < gridY; j++) {
-                        JPanel panel = gridPanels[i][j];
+                        ColorPanel panel = gridPanels[i][j];
                         if (panel.getBounds().contains(x, y)) {
                             Color activeColor = Palette.getActiveColor();
+                            BufferedImage activeSymbol = Palette.getActiveSymbol();
                             if (activeColor == null) {
                                 JOptionPane.showMessageDialog(null,
                                             "No color has been selected",
                                             "Error",
                                             JOptionPane.WARNING_MESSAGE);
                             }
-                            if (panel.getBackground() != activeColor) {
-                                panel.setBackground(activeColor);
-                                // panel.setSymbol();
+                            if (panel.getColor() != activeColor) {
+                                panel.setColor(activeColor);
+                                panel.setSymbol(activeSymbol);
                             } else {
-                                panel.setBackground(Color.WHITE);
-                                // panel.setSymbol();
+                                panel.setBackground(Palette.getBackgroundColor());
+                                panel.setSymbol(null);
                             }
+                            panel.revalidate();
+                            panel.repaint();
                         }
                     }
-                }
+               }
             }
         });
 
@@ -156,6 +160,38 @@ public class ClickableGridPanel extends JPanel {
         viewport.setViewPosition(corner);
 
         previousZoomLevel = zoomLevel;
+    }
+
+    public void initializeGrid() {
+        gridPanels = new ColorPanel[gridX][gridY];
+        for (int i = 0; i < gridX; i++) {
+            for (int j = 0; j < gridY; j++) {
+                gridPanels[i][j] = new ColorPanel(Palette.getBackgroundColor(), null);
+                gridPanels[i][j].setPreferredSize(new Dimension(10, 10));
+                gridPanels[i][j].setBorder(BorderFactory.createLineBorder(Palette.getBorderColor()));
+                add(gridPanels[i][j]);
+            }
+        }
+    }
+
+    public static void updateGrid() {
+        // read data map of hash keys
+        // match keys to color and symbol values
+        // color each pixel
+        return;
+    }
+
+    public void resetGrid() {
+        int option = JOptionPane.showConfirmDialog(null, "Are you sure you want to reset the grid?");
+        if (option != JOptionPane.OK_OPTION) {
+            return;
+        }
+        for (int i = 0; i < gridX; i++) {
+            for (int j = 0; j < gridY; j++) {
+                gridPanels[i][j].setBackground(Palette.getBackgroundColor());
+                gridPanels[i][j].setSymbol(null);       
+            }
+        }
     }
 
     public static void main(String[] args) {
