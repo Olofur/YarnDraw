@@ -16,8 +16,8 @@ public class Palette extends JPanel{
     private static Color backgroundColor;
     private static Color borderColor;
 
-    public SvgStack stack;
-    public ImageManager manager;
+    private SvgStack stack;
+    private ImageManager manager;
 
     //private ArrayList<ColorSymbol> colorSymbols;
 
