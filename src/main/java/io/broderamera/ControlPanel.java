@@ -5,7 +5,7 @@ import java.awt.*;
 import java.awt.event.*;
 
 public class ControlPanel extends JPanel {
-    private String represent = "Color";
+    private static String represent = "Color";
     
     public ControlPanel() {
         JButton buttonA = new JButton("Colors");
@@ -40,11 +40,11 @@ public class ControlPanel extends JPanel {
         this.add(buttonB);
     }
 
-    public void setRepresent(String represent) {
-        this.represent = represent;
+    public static void setRepresent(String represent) {
+        ControlPanel.represent = represent;
     }
 
-    public String getRepresent() {
+    public static String getRepresent() {
         return represent;
     }
 
