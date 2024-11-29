@@ -5,31 +5,43 @@ import java.awt.*;
 import java.awt.event.*;
 
 public class ControlPanel extends JPanel {
-    private static String represent = "Color";
+    private static boolean color;
+    private static boolean symbol;
     
     public ControlPanel() {
+        color = true;
+        symbol = false;
+
         JButton buttonA = new JButton("Colors");
         JButton buttonB = new JButton("Symbols");
 
+        Palette.updatePalette();
+
         buttonA.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                buttonA.setBackground(Color.LIGHT_GRAY);
-                buttonB.setBackground(Color.WHITE);
-                setRepresent("Colors");
-                // update grid panel
-                // update palette color buttons
-                System.out.println("You chose color representation");
+                if (color) {
+                    buttonA.setBackground(Color.WHITE);
+                } else {
+                    buttonA.setBackground(Color.LIGHT_GRAY);
+                }
+                setColor();
+                Palette.updatePalette();
+                ClickableGridPanel.updateGrid();
+                System.out.println("Color representation is: " + color);
             }
         });
 
         buttonB.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                buttonA.setBackground(Color.WHITE);
-                buttonB.setBackground(Color.LIGHT_GRAY);
-                setRepresent("Symbols");
-                // update grid panel
-                // update palette color buttons
-                System.out.println("You chose symbol representation");
+                if (symbol) {
+                    buttonB.setBackground(Color.WHITE);
+                } else {
+                    buttonB.setBackground(Color.LIGHT_GRAY);
+                }
+                setSymbol();
+                Palette.updatePalette();
+                ClickableGridPanel.updateGrid();
+                System.out.println("Symbol representation is: " + symbol);
             }
         });
 
@@ -40,12 +52,20 @@ public class ControlPanel extends JPanel {
         this.add(buttonB);
     }
 
-    public static void setRepresent(String represent) {
-        ControlPanel.represent = represent;
+    public static void setColor() {
+        ControlPanel.color = !ControlPanel.color;
     }
 
-    public static String getRepresent() {
-        return represent;
+    public static boolean showColor() {
+        return color;
+    }
+    
+    public static void setSymbol() {
+        ControlPanel.symbol = !ControlPanel.symbol;
+    }
+
+    public static boolean showSymbol() {
+        return symbol;
     }
 
     public void main(String[] args) {
