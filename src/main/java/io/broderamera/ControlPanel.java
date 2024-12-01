@@ -26,6 +26,7 @@ public class ControlPanel extends JPanel {
                 }
                 setColor();
                 Palette.updatePalette();
+                Palette.updateActive();
                 ClickableGridPanel.updateGrid();
                 System.out.println("Color representation is: " + color);
             }
@@ -40,6 +41,7 @@ public class ControlPanel extends JPanel {
                 }
                 setSymbol();
                 Palette.updatePalette();
+                Palette.updateActive();
                 ClickableGridPanel.updateGrid();
                 System.out.println("Symbol representation is: " + symbol);
             }

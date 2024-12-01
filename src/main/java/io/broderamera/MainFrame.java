@@ -4,9 +4,6 @@ import javax.swing.*;
 //import java.util.ArrayList;
 
 public class MainFrame {
-    //private ArrayList<Color> colors = new ArrayList<>();
-    //private JTextField colorField = new JTextField(10);
-
     public static void main(String[] args) {
         JFrame frame = new JFrame();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

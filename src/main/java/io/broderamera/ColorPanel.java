@@ -5,17 +5,20 @@ import javax.swing.*;
 import java.awt.image.BufferedImage;
 
 public class ColorPanel extends JPanel {
+    private int key;
     private Color color;
     private BufferedImage symbol;
 
     public ColorPanel() {
         super();
+        this.key = 0;
         this.color = null;
         this.symbol = null;
     }
 
-    public ColorPanel(Color color, BufferedImage symbol) {
+    public ColorPanel(int key, Color color, BufferedImage symbol) {
         super();
+        this.key = key;
         this.color = color;
         this.symbol = symbol;
     }
@@ -25,6 +28,14 @@ public class ColorPanel extends JPanel {
         super.paintComponent(g);
         super.setBackground(color);
         g.drawImage(symbol, 0, 0, getWidth(), getHeight(), null);      
+    }
+
+    public int getKey() {
+        return key;
+    }
+
+    public void setKey(int key) {
+        this.key = key;
     }
 
     public Color getColor() {

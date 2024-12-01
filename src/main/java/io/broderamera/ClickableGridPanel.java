@@ -8,8 +8,6 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.image.BufferedImage;
 
-import java.util.HashMap;
-
 public class ClickableGridPanel extends JPanel {
     private int zoomLevel = 1;
     private int previousZoomLevel = 1;
@@ -17,12 +15,8 @@ public class ClickableGridPanel extends JPanel {
 
     private static ColorPanel[][] gridPanels;
 
-    // Generate integer keys for the symbolmap, which the grid values are mapped to
-    private int[][] gridValues;
-    private HashMap<Integer, ColorSymbol> symbolMap; 
-
-    private int gridX;
-    private int gridY;
+    private static int gridX;
+    private static int gridY;
 
     public ClickableGridPanel(int x, int y) {
         gridX = x;
@@ -41,9 +35,11 @@ public class ClickableGridPanel extends JPanel {
                     for (int j = 0; j < gridY; j++) {
                         ColorPanel panel = gridPanels[i][j];
                         if (panel.getBounds().contains(x, y)) {
+                            int activeKey = Palette.getActiveKey();
                             Color activeColor = Palette.getActiveColor();
                             BufferedImage activeSymbol = Palette.getActiveSymbol();
                             if (panel.getColor() != activeColor) {
+                                panel.setKey(activeKey);
                                 panel.setColor(activeColor);
                                 panel.setSymbol(activeSymbol);
                                 panel.revalidate();
@@ -64,6 +60,7 @@ public class ClickableGridPanel extends JPanel {
                     for (int j = 0; j < gridY; j++) {
                         ColorPanel panel = gridPanels[i][j];
                         if (panel.getBounds().contains(x, y)) {
+                            int activeKey = Palette.getActiveKey();
                             Color activeColor = Palette.getActiveColor();
                             BufferedImage activeSymbol = Palette.getActiveSymbol();
                             if (activeColor == null) {
@@ -73,17 +70,19 @@ public class ClickableGridPanel extends JPanel {
                                             JOptionPane.WARNING_MESSAGE);
                             }
                             if (panel.getColor() != activeColor) {
+                                panel.setKey(activeKey);
                                 panel.setColor(activeColor);
                                 panel.setSymbol(activeSymbol);
                             } else {
-                                panel.setBackground(Palette.getBackgroundColor());
+                                panel.setKey(1);
+                                panel.setColor(Palette.getBackgroundColor());
                                 panel.setSymbol(null);
                             }
                             panel.revalidate();
                             panel.repaint();
                         }
                     }
-               }
+                }
             }
         });
 
@@ -166,18 +165,37 @@ public class ClickableGridPanel extends JPanel {
         gridPanels = new ColorPanel[gridX][gridY];
         for (int i = 0; i < gridX; i++) {
             for (int j = 0; j < gridY; j++) {
-                gridPanels[i][j] = new ColorPanel(Palette.getBackgroundColor(), null);
+                Color background = Palette.getBackgroundColor();
+                Color border = Palette.getBorderColor();
+                gridPanels[i][j] = new ColorPanel(1, background, null);
                 gridPanels[i][j].setPreferredSize(new Dimension(10, 10));
-                gridPanels[i][j].setBorder(BorderFactory.createLineBorder(Palette.getBorderColor()));
+                gridPanels[i][j].setBorder(BorderFactory.createLineBorder(border));
                 add(gridPanels[i][j]);
             }
         }
     }
 
     public static void updateGrid() {
-        // read data map of hash keys
-        // match keys to color and symbol values
-        // color each pixel
+        for (int i = 0; i < gridX; i++) {
+            for (int j = 0; j < gridY; j++) {
+                ColorPanel panel = gridPanels[i][j];
+                int key = panel.getKey();
+                Color keyColor = Palette.biglyMap.get(key).color();
+                BufferedImage keySymbol = Palette.biglyMap.get(key).symbol();
+                if (ControlPanel.showColor()) {
+                    panel.setColor(keyColor);
+                } else {
+                    panel.setColor(Palette.getBackgroundColor());
+                }
+                if (ControlPanel.showSymbol()) {
+                    panel.setSymbol(keySymbol);
+                } else {
+                    panel.setSymbol(null);
+                }
+                panel.revalidate();
+                panel.repaint();
+            }
+        }
         return;
     }
 

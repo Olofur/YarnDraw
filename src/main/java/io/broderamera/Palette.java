@@ -7,12 +7,15 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 
 import java.util.HashMap;
+import java.util.Map;
 
 public class Palette extends JPanel{
-    private static HashMap<Color, ColorSymbol> colorSymbols;
+    public static HashMap<Integer, ColorSymbol> biglyMap;
+
     private static JPanel palettePanel;
     private static JTextField colorField;
 
+    private static int activeKey;
     private static Color activeColor;
     private static BufferedImage activeSymbol;
 
@@ -41,15 +44,18 @@ public class Palette extends JPanel{
                 for (int i = 0; i < palettePanel.getComponentCount(); i++) {
                     ColorPanel panel = (ColorPanel) palettePanel.getComponent(i);
                     if (panel.getBounds().contains(x, y)) {
+                        setActiveKey(panel.getKey());
                         setActiveColor(panel.getColor());
                         setActiveSymbol(panel.getSymbol());
+                        String hexColor = String.format("#%06X", (0xFFFFFF & panel.getColor().getRGB()));
+                        insertText(hexColor);
                     }
                 }
             }
         });
 
-        // List of all added colors and symbols
-        colorSymbols = new HashMap<>();
+        // Hashmap of all added colors and symbols
+        biglyMap = new HashMap<Integer, ColorSymbol>();
 
         // Text field for managing colors
         colorField = new JTextField(25);
@@ -68,7 +74,8 @@ public class Palette extends JPanel{
         initializeStack();
 
         // Add background color to palette
-        colorSymbols.put(backgroundColor, new ColorSymbol(null, "None"));
+        ColorSymbol basePanel = new ColorSymbol(backgroundColor, null, "None");
+        biglyMap.put(basePanel.getKey(), basePanel);
         updatePalette();
     }
 
@@ -81,16 +88,17 @@ public class Palette extends JPanel{
                 String colorString = colorField.getText();
                 try {
                     Color color = Color.decode(colorString);
-                    if (!colorSymbols.keySet().contains(color)) {
+                    if (getKeyForColor(color) == -1) {
                         String item = stack.popItem();
                         BufferedImage symbol = manager.getImage(item);
-                        colorSymbols.put(color, new ColorSymbol(symbol, item));
+                        ColorSymbol cs = new ColorSymbol(color, symbol, item);
+                        biglyMap.put(cs.getKey(), cs);
                         updatePalette();
                         }
                 } catch (NumberFormatException ex) {
                     JOptionPane.showMessageDialog(null, "Invalid color code");
                 }
-                System.out.println("Number of colors: " + colorSymbols.size());
+                System.out.println("Number of colors: " + biglyMap.size());
             }
         });
         return Button;
@@ -103,19 +111,26 @@ public class Palette extends JPanel{
             @Override
             public void actionPerformed(ActionEvent e) {
                 String colorString = colorField.getText();
-                if (!colorSymbols.isEmpty()) {
+                if (!biglyMap.isEmpty()) {
                     try {
                         Color color = Color.decode(colorString);
+                        int key = getKeyForColor(color);
                         // Add symbol back to stack
-                        String symbolName = colorSymbols.get(color).symbolName();
+                        String symbolName = biglyMap.get(key).symbolName();
                         stack.addItem(symbolName);
-                        colorSymbols.remove(color);
+                        biglyMap.remove(key);
+                        for (Map.Entry<Integer, ColorSymbol> entry : biglyMap.entrySet()) {
+                            if (entry.getValue().color().equals(color)) {
+                                biglyMap.remove(entry.getKey());
+                                break;
+                            }
+                        }
                         updatePalette();
                     } catch (NumberFormatException ex) {
                         JOptionPane.showMessageDialog(null, "Invalid color code");
                     }
                 }
-                System.out.println("Number of colors: " + colorSymbols.size());
+                System.out.println("Number of colors: " + biglyMap.size());
             }
         });
         return Button;
@@ -123,13 +138,17 @@ public class Palette extends JPanel{
 
     public static ColorPanel colorButton(Color color) {
         ColorPanel Button = new ColorPanel();
+        int key = getKeyForColor(color);
+        Button.setKey(key);
         if (ControlPanel.showColor()) {
             Button.setColor(color);
         } else {
             Button.setColor(backgroundColor);
         }
         if (ControlPanel.showSymbol()) {
-            Button.setSymbol(colorSymbols.get(color).symbol());
+            Button.setSymbol(biglyMap.get(key).symbol());
+        } else {
+            Button.setSymbol(null);
         }
         Button.setPreferredSize(new Dimension(100, 50));
         return Button;
@@ -150,13 +169,40 @@ public class Palette extends JPanel{
     public static void updatePalette() {
         // Do not remuve all, instead see what has changed and update only that
         palettePanel.removeAll();
-        for (Color color : colorSymbols.keySet()) {
-            ColorPanel button = colorButton(color);
+        for (int key : biglyMap.keySet()) {
+            ColorPanel button = colorButton(biglyMap.get(key).color());
             button.setBorder(BorderFactory.createLineBorder(getBorderColor()));
             palettePanel.add(button);
         }
         palettePanel.revalidate();
         palettePanel.repaint();
+    }
+
+    public static void updateActive() {
+        int key = getActiveKey();
+        Color keyColor = biglyMap.get(key).color();
+        BufferedImage keySymbol = Palette.biglyMap.get(key).symbol();
+        if (ControlPanel.showColor()) {
+            setActiveColor(keyColor);
+        } else {
+            setActiveColor(backgroundColor);
+        }
+        System.out.println("Active color changed to: " + activeColor);
+        if (ControlPanel.showSymbol()) {
+            setActiveSymbol(keySymbol);
+        } else {
+            setActiveSymbol(null);
+        }
+        System.out.println("Active symbol changed to: " + activeSymbol);
+    }
+
+    public static void setActiveKey(int key) {
+        activeKey = key;
+        System.out.println("Active key changed to: " + activeKey);
+    }
+
+    public static int getActiveKey() {
+        return activeKey;
     }
 
     public static void setActiveColor(Color color) {
@@ -183,6 +229,16 @@ public class Palette extends JPanel{
 
     public static Color getBorderColor() {
         return borderColor;
+    }
+
+    public static int getKeyForColor(Color color) {
+        for (Map.Entry<Integer, ColorSymbol> entry : biglyMap.entrySet()) {
+            if (entry.getValue().color().equals(color)) {
+                return entry.getKey();
+            }
+        }
+        System.out.println("No key found for color: " + color + ", defaulting to -1");
+        return -1;
     }
 
     public static void insertText(String text) {
