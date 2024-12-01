@@ -36,12 +36,10 @@ public class ClickableGridPanel extends JPanel {
                         ColorPanel panel = gridPanels[i][j];
                         if (panel.getBounds().contains(x, y)) {
                             int activeKey = Palette.getActiveKey();
-                            Color activeColor = Palette.getActiveColor();
-                            BufferedImage activeSymbol = Palette.getActiveSymbol();
-                            if (panel.getColor() != activeColor) {
-                                panel.setKey(activeKey);
-                                panel.setColor(activeColor);
-                                panel.setSymbol(activeSymbol);
+                            if (panel.getKey() != activeKey) {
+                                Color activeColor = Palette.getActiveColor();
+                                BufferedImage activeSymbol = Palette.getActiveSymbol();
+                                panel.setStats(activeKey, activeColor, activeSymbol);
                                 panel.revalidate();
                                 panel.repaint();
                             }
@@ -70,13 +68,9 @@ public class ClickableGridPanel extends JPanel {
                                             JOptionPane.WARNING_MESSAGE);
                             }
                             if (panel.getColor() != activeColor) {
-                                panel.setKey(activeKey);
-                                panel.setColor(activeColor);
-                                panel.setSymbol(activeSymbol);
+                                panel.setStats(activeKey, activeColor, activeSymbol);
                             } else {
-                                panel.setKey(1);
-                                panel.setColor(Palette.getBackgroundColor());
-                                panel.setSymbol(null);
+                                panel.setStats(1, Palette.getBackgroundColor(), null);
                             }
                             panel.revalidate();
                             panel.repaint();
@@ -182,15 +176,14 @@ public class ClickableGridPanel extends JPanel {
                 int key = panel.getKey();
                 Color keyColor = Palette.biglyMap.get(key).color();
                 BufferedImage keySymbol = Palette.biglyMap.get(key).symbol();
-                if (ControlPanel.showColor()) {
-                    panel.setColor(keyColor);
+                if (ControlPanel.showColor() && ControlPanel.showSymbol()) {
+                    panel.setStats(key, keyColor, keySymbol);
+                } else if (ControlPanel.showColor() && !ControlPanel.showSymbol()) {
+                    panel.setStats(key, keyColor, null);
+                } else if (!ControlPanel.showColor() && ControlPanel.showSymbol()) {
+                    panel.setStats(key, Palette.getBackgroundColor(), keySymbol);
                 } else {
-                    panel.setColor(Palette.getBackgroundColor());
-                }
-                if (ControlPanel.showSymbol()) {
-                    panel.setSymbol(keySymbol);
-                } else {
-                    panel.setSymbol(null);
+                    panel.setStats(key, Palette.getBackgroundColor(), null);
                 }
                 panel.revalidate();
                 panel.repaint();

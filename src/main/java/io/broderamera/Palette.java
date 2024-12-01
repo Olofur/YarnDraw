@@ -196,6 +196,12 @@ public class Palette extends JPanel{
         System.out.println("Active symbol changed to: " + activeSymbol);
     }
 
+    public static void setActive(int key, Color color, BufferedImage symbol) {
+        setActiveKey(key);
+        setActiveColor(color);
+        setActiveSymbol(symbol);
+    }
+
     public static void setActiveKey(int key) {
         activeKey = key;
         System.out.println("Active key changed to: " + activeKey);

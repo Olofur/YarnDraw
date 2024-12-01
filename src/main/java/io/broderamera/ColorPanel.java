@@ -30,12 +30,19 @@ public class ColorPanel extends JPanel {
         g.drawImage(symbol, 0, 0, getWidth(), getHeight(), null);      
     }
 
+    public void setStats(int key, Color color, BufferedImage symbol) {
+        this.key = key;
+        this.color = color;
+        this.symbol = symbol;
+    }
+
     public int getKey() {
         return key;
     }
 
     public void setKey(int key) {
         this.key = key;
+
     }
 
     public Color getColor() {
