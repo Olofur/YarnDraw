@@ -12,9 +12,8 @@ public class ClickableGridPanel extends JPanel {
     private int previousZoomLevel = 1;
     private int zoomMax = 20;
 
-    private static boolean fillIn = false;
-
-    private static ColorPanel[][] gridPanels;
+    private static ColorPanel[] gridPanels;
+    private static int[][] keyMap;
 
     private static int gridX;
     private static int gridY;
@@ -24,7 +23,8 @@ public class ClickableGridPanel extends JPanel {
         gridY = y;
 
         setLayout(new GridLayout(gridX, gridY));
-        gridPanels = new ColorPanel[gridX][gridY];
+        gridPanels = new ColorPanel[gridX * gridY];
+        keyMap = new int[gridX][gridY];
 
         initializeGrid();
 
@@ -32,18 +32,18 @@ public class ClickableGridPanel extends JPanel {
             public void mouseDragged(MouseEvent e) {
                 int x = e.getX();
                 int y = e.getY();
-                for (int i = 0; i < gridX; i++) {
-                    for (int j = 0; j < gridY; j++) {
-                        ColorPanel panel = gridPanels[i][j];
-                        if (panel.getBounds().contains(x, y)) {
-                            int activeKey = Palette.getActiveKey();
-                            if (panel.getKey() != activeKey) {
-                                panel.setStats(activeKey);
-                                panel.revalidate();
-                                panel.repaint();
-                            }
-                        }
-                    }
+                Component component = getComponentAt(x, y);
+                ColorPanel panel;
+                if (component instanceof ColorPanel) {
+                    panel = (ColorPanel) component;
+                } else {
+                    return;
+                }
+                int activeKey = Palette.getActiveKey();
+                if (panel.getKey() != activeKey) {
+                    panel.setStats(activeKey);
+                    panel.revalidate();
+                    panel.repaint();
                 }
             }
         });
@@ -53,31 +53,33 @@ public class ClickableGridPanel extends JPanel {
             public void mouseClicked(MouseEvent e) {
                 int x = e.getX();
                 int y = e.getY();
-                for (int i = 0; i < gridX; i++) {
-                    for (int j = 0; j < gridY; j++) {
-                        ColorPanel panel = gridPanels[i][j];
-                        if (panel.getBounds().contains(x, y)) {
-                            int activeKey = Palette.getActiveKey();
-                            if (activeKey <= 0) {
-                                JOptionPane.showMessageDialog(null,
-                                            "No color has been selected",
-                                            "Error",
-                                            JOptionPane.WARNING_MESSAGE);
-                            }
-                            if (fillIn) {
-                                fillInColor(i, j, panel.getKey());
-                                return;
-                            }
-                            if (panel.getKey() != activeKey) {
-                                panel.setStats(activeKey);
-                            } else {
-                                panel.setStats(1);
-                            }
-                            panel.revalidate();
-                            panel.repaint();
-                        }
-                    }
+                Component component = getComponentAt(x, y);
+                ColorPanel panel;
+                if (component instanceof ColorPanel) {
+                    panel = (ColorPanel) component;
+                } else {
+                    return;
                 }
+                int activeKey = Palette.getActiveKey();
+                if (activeKey <= 0) {
+                    JOptionPane.showMessageDialog(null,
+                                "No color has been selected",
+                                "Error",
+                                JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                if (ControlPanel.getFillIn()) {
+                    int[] indices = getGridPosition(panel, x, y);
+                    fillInColor(indices[0], indices[1], panel.getKey());
+                    return;
+                }
+                if (panel.getKey() != activeKey) {
+                    panel.setStats(activeKey);
+                } else {
+                    panel.setStats(1);
+                }
+                panel.revalidate();
+                panel.repaint();
             }
         });
 
@@ -102,10 +104,8 @@ public class ClickableGridPanel extends JPanel {
 
     private void updateZoom(MouseWheelEvent e) {
         // Zoom the grid
-        for (int i = 0; i < gridX; i++) {
-            for (int j = 0; j < gridY; j++) {
-                gridPanels[i][j].setPreferredSize(new Dimension(5 * zoomLevel, 5 * zoomLevel));    
-            }
+        for (int index = 0; index < gridX * gridY; index++) {
+            gridPanels[index].setPreferredSize(new Dimension(5 * zoomLevel, 5 * zoomLevel));    
         }
         int totalWidth = 5 * zoomLevel * gridX;
         int totalHeight = 5 * zoomLevel * gridY;
@@ -126,6 +126,8 @@ public class ClickableGridPanel extends JPanel {
             return;
         }
 
+        // This could be separate function
+
         // Get the JViewport
         JViewport viewport = scrollPane.getViewport();
 
@@ -136,7 +138,7 @@ public class ClickableGridPanel extends JPanel {
 
         double zoomRatio = ((double) zoomLevel / previousZoomLevel);
 
-        // View (local) coordiates of the cursor
+        // Get (local) coordiates of the cursor
         double cursorX = cursorPoint.getX();
         double cursorY = cursorPoint.getY();
 
@@ -157,27 +159,27 @@ public class ClickableGridPanel extends JPanel {
     }
 
     public void initializeGrid() {
-        gridPanels = new ColorPanel[gridX][gridY];
-        for (int i = 0; i < gridX; i++) {
-            for (int j = 0; j < gridY; j++) {
-                Color background = Palette.getBackgroundColor();
-                Color border = Palette.getBorderColor();
-                gridPanels[i][j] = new ColorPanel(1, background, null);
-                gridPanels[i][j].setPreferredSize(new Dimension(10, 10));
-                gridPanels[i][j].setBorder(BorderFactory.createLineBorder(border));
-                add(gridPanels[i][j]);
-            }
+        Color border = Palette.getBorderColor();
+        gridPanels = new ColorPanel[gridX * gridY];
+        for (int index = 0; index < gridX * gridY; index++) {
+            ColorPanel panel = new ColorPanel();
+            panel.setStats(1);
+            panel.setPreferredSize(new Dimension(10, 10));
+            panel.setBorder(BorderFactory.createLineBorder(border));
+            gridPanels[index] = panel;
+            add(gridPanels[index]);
         }
     }
 
     public static void updateGrid() {
-        for (int i = 0; i < gridX; i++) {
-            for (int j = 0; j < gridY; j++) {
-                ColorPanel panel = gridPanels[i][j];
-                int key = panel.getKey();
-                if (!Palette.getBiglyMap().keySet().contains(key)) {
-                    key = 1;
-                }
+        for (int index = 0; index < gridX * gridY; index++) {
+            ColorPanel panel = gridPanels[index];
+            int key = panel.getKey();
+            if (!Palette.getBiglyMap().keySet().contains(key)) {
+                key = 1;
+            }
+            if (panel.getColor() != Palette.getBiglyMap().get(key).color() ||
+                panel.getSymbol() != Palette.getBiglyMap().get(key).symbol()) {
                 panel.setStats(key);
                 panel.revalidate();
                 panel.repaint();
@@ -187,14 +189,25 @@ public class ClickableGridPanel extends JPanel {
     }
 
     public static void resetGrid() {
-        for (int i = 0; i < gridX; i++) {
-            for (int j = 0; j < gridY; j++) {
-                ColorPanel panel = gridPanels[i][j];
-                panel.setStats(1);  
-                panel.revalidate();
-                panel.repaint();    
+        for (int index = 0; index < gridX * gridY; index++) {
+            ColorPanel panel = gridPanels[index];
+            panel.setStats(1);  
+            panel.revalidate();
+            panel.repaint();    
+        }
+    }
+
+    public static int[] getGridPosition(ColorPanel panel, int x, int y) {
+        for (int index = 0; index < gridX * gridY; index++) {
+            int i = index / gridY;
+            int j = index % gridY;
+            if (gridPanels[index] == panel) {
+                x = i;
+                y = j;
+                break;
             }
         }
+        return new int[]{x, y};
     }
 
     public static void fillInColor(int i, int j, int key) {
@@ -202,8 +215,8 @@ public class ClickableGridPanel extends JPanel {
         // for all pixels of the same color
         // if the pixel is not filled in yet
         // if the pixel is already filled in, do nothing
-
-        ColorPanel panel = gridPanels[i][j];
+        int index = i * gridY + j;
+        ColorPanel panel = gridPanels[index];
         if (panel.getKey() == key) {
             int activeKey = Palette.getActiveKey();
             panel.setStats(activeKey);
@@ -217,12 +230,13 @@ public class ClickableGridPanel extends JPanel {
         }
     }
 
-    public static void changeFillIn() {
-        fillIn = !fillIn;
-    }
-
-    public static boolean getFillIn() { 
-        return fillIn;
+    public static int[][] getKeyMap() { 
+        for (int index = 0; index < gridX * gridY; index++) {
+            int i = index / gridY;
+            int j = index % gridY;
+            keyMap[i][j] = gridPanels[index].getKey();
+        }
+        return keyMap;
     }
 
     public static void main(String[] args) {

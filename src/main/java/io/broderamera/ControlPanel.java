@@ -3,14 +3,17 @@ package io.broderamera;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.HashMap;
 
 public class ControlPanel extends JPanel {
     private static boolean color;
     private static boolean symbol;
+    private static boolean fillIn;
     
     public ControlPanel() {
         color = true;
         symbol = false;
+        fillIn = false;
 
         Palette.updatePalette();
 
@@ -110,17 +113,19 @@ public class ControlPanel extends JPanel {
                 frame.setVisible(true);
             }
         });
+        buttonC.setBackground(Color.WHITE);
 
         buttonD.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                ClickableGridPanel.changeFillIn();
-                if (ClickableGridPanel.getFillIn()) {
+                changeFillIn();
+                if (getFillIn()) {
                     buttonD.setBackground(Color.LIGHT_GRAY);
                 } else {
                     buttonD.setBackground(Color.WHITE);
                 }
             }
         });
+        buttonD.setBackground(Color.WHITE);
 
         buttonE.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -131,16 +136,27 @@ public class ControlPanel extends JPanel {
                 ClickableGridPanel.resetGrid();
             }
         });
+        buttonE.setBackground(Color.WHITE);
+
+        // to be implemented
+        // buttonF.addActionListener(new ActionListener() {
+        //     public void actionPerformed(ActionEvent e) {
+        //         int[][] keyMap = ClickableGridPanel.getKeyMap();
+        //         HashMap<Integer, ColorSymbol> biglyMap = Palette.getBiglyMap();
+        //     }
+        // });
+        // buttonF.setBackground(Color.WHITE);
 
         add(buttonA);
         add(buttonB);
         add(buttonC);
         add(buttonD);        
         add(buttonE);
-        // this.add(buttonF);        
-        // this.add(buttonG);
-        // this.add(buttonH);  
-        // this.add(buttonI);
+        // add(buttonF);        
+        // add(buttonG);
+        // add(buttonH);  
+        // add(buttonI);
+        // add(buttonJ);
     }
 
     public static void setColor() {
@@ -157,6 +173,14 @@ public class ControlPanel extends JPanel {
 
     public static boolean showSymbol() {
         return symbol;
+    }
+
+    public static void changeFillIn() {
+        ControlPanel.fillIn = !ControlPanel.fillIn;
+    }
+
+    public static boolean getFillIn() {
+        return fillIn;
     }
 
     public void main(String[] args) {
