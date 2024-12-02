@@ -44,13 +44,11 @@ public class Palette extends JPanel{
                         setActive(panel.getKey(), panel.getColor(), panel.getSymbol());
                         String hexColor = String.format("#%06X", (0xFFFFFF & panel.getColor().getRGB()));
                         insertText(hexColor);
+                        updateBorderHighlight();
                     }
                 }
             }
         });
-
-        // Hashmap of all added colors and symbols
-        biglyMap = new HashMap<Integer, ColorSymbol>();
 
         // Initialize add and remove buttons
         add(addButton());
@@ -63,6 +61,9 @@ public class Palette extends JPanel{
         stack = new SvgStack();
         manager = new ImageManager();
         initializeStack();
+
+        // Hashmap of all added colors and symbols
+        biglyMap = new HashMap<Integer, ColorSymbol>();
 
         // Add background color to palette
         ColorSymbol basePanel = new ColorSymbol(backgroundColor, null, "None");
@@ -169,7 +170,11 @@ public class Palette extends JPanel{
         palettePanel.removeAll();
         for (int key : biglyMap.keySet()) {
             ColorPanel button = colorButton(biglyMap.get(key).color());
-            button.setBorder(BorderFactory.createLineBorder(getBorderColor()));
+            if (activeKey == key) {
+                button.setBorder(BorderFactory.createLineBorder(Color.BLUE, 4));
+            } else {
+                button.setBorder(BorderFactory.createLineBorder(getBorderColor()));
+            }
             palettePanel.add(button);
         }
         palettePanel.revalidate();
@@ -195,6 +200,17 @@ public class Palette extends JPanel{
             setActiveSymbol(null);
         }
         System.out.println("Active symbol changed to: " + activeSymbol);
+    }
+
+    public static void updateBorderHighlight() {
+        for (int i = 0; i < palettePanel.getComponentCount(); i++) {
+            ColorPanel panel = (ColorPanel) palettePanel.getComponent(i);
+            if (activeKey == panel.getKey()) {
+                panel.setBorder(BorderFactory.createLineBorder(Color.BLUE, 4));
+            } else {
+                panel.setBorder(BorderFactory.createLineBorder(getBorderColor()));
+            }
+        }
     }
 
     public static void setActive(int key, Color color, BufferedImage symbol) {
