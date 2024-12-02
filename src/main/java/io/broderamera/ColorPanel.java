@@ -45,6 +45,25 @@ public class ColorPanel extends JPanel {
         }
     }
 
+    public boolean isRepresentedWrongly() {
+        if (ControlPanel.showColor() 
+                && this.color != Palette.getBiglyMap().get(key).color()) {
+            return true;
+        } else if (!ControlPanel.showColor() 
+                && this.color != Palette.getBackgroundColor()) {
+            return true;
+        } else if (ControlPanel.showSymbol() 
+                && this.symbol != Palette.getBiglyMap().get(key).symbol()) {
+            return true;
+        } else if (!ControlPanel.showSymbol() 
+                && this.symbol != null) {
+            if (Palette.getBiglyMap().get(key).symbol() != null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public int getKey() {
         return key;
     }

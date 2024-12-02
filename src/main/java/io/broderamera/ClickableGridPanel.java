@@ -178,8 +178,7 @@ public class ClickableGridPanel extends JPanel {
             if (!Palette.getBiglyMap().keySet().contains(key)) {
                 key = 1;
             }
-            if (panel.getColor() != Palette.getBiglyMap().get(key).color() ||
-                panel.getSymbol() != Palette.getBiglyMap().get(key).symbol()) {
+            if (panel.isRepresentedWrongly()) {
                 panel.setStats(key);
                 panel.revalidate();
                 panel.repaint();
