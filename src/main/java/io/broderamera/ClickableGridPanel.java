@@ -65,7 +65,7 @@ public class ClickableGridPanel extends JPanel {
                                             JOptionPane.WARNING_MESSAGE);
                             }
                             if (fillIn) {
-                                fillInBaby(i, j, panel.getKey());
+                                fillInColor(i, j, panel.getKey());
                                 return;
                             }
                             if (panel.getKey() != activeKey) {
@@ -197,35 +197,23 @@ public class ClickableGridPanel extends JPanel {
         }
     }
 
-    public static void fillInBaby(int i, int j, int key) {
+    public static void fillInColor(int i, int j, int key) {
         // recursively go outwards from i,j and fill in the grid
         // for all pixels of the same color
         // if the pixel is not filled in yet
         // if the pixel is already filled in, do nothing
-        
-        for (int k = -1; k <= 1; k = k + 2) {
-            if (i + k >= 0 && i + k < gridX) {
-                ColorPanel panel = gridPanels[i + k][j];
-                int activeKey = Palette.getActiveKey();
-                if (panel.getKey() == key) {
-                    panel.setStats(activeKey);
-                    panel.revalidate();
-                    panel.repaint();
-                    fillInBaby(i + k, j, key);
-                }
-            }
-        }
-        for (int l = -1; l <= 1; l = l + 2) {
-            if (j + l >= 0 && j + l < gridY) {
-                ColorPanel panel = gridPanels[i][j + l];
-                int activeKey = Palette.getActiveKey();
-                if (panel.getKey() == key) {
-                    panel.setStats(activeKey);
-                    panel.revalidate();
-                    panel.repaint();
-                    fillInBaby(i, j + l, key);
-                }
-            }
+
+        ColorPanel panel = gridPanels[i][j];
+        if (panel.getKey() == key) {
+            int activeKey = Palette.getActiveKey();
+            panel.setStats(activeKey);
+            panel.revalidate();
+            panel.repaint();
+            // Visit all direct neightbors
+            fillInColor(i + 1, j, key);
+            fillInColor(i - 1, j, key);
+            fillInColor(i, j + 1, key);
+            fillInColor(i, j - 1, key);
         }
     }
 
