@@ -16,10 +16,6 @@ public class MainFrame {
         int x = 100; //Integer.parseInt(JOptionPane.showInputDialog("Enter x dimension"));
         int y = 100; //Integer.parseInt(JOptionPane.showInputDialog("Enter y dimension"));
 
-        ClickableGridPanel grid = new ClickableGridPanel(x, y);
-        JScrollPane scrollGrid = new JScrollPane(grid);
-        mainPane.setLeftComponent(scrollGrid);
-
         // Create color wheel panel
         ColorWheel colorWheel = new ColorWheel();
         menuPane.setTopComponent(colorWheel);
@@ -33,6 +29,10 @@ public class MainFrame {
 
         menuPane.setBottomComponent(optionPane);
         mainPane.setRightComponent(menuPane);
+
+        ClickableGridPanel grid = new ClickableGridPanel(x, y);
+        JScrollPane scrollGrid = new JScrollPane(grid);
+        mainPane.setLeftComponent(scrollGrid);
 
         // Set the split pane proportions
         mainPane.setDividerLocation(.99);
