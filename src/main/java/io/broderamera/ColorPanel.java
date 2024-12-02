@@ -30,10 +30,19 @@ public class ColorPanel extends JPanel {
         g.drawImage(symbol, 0, 0, getWidth(), getHeight(), null);      
     }
 
-    public void setStats(int key, Color color, BufferedImage symbol) {
+    public void setStats(int key) {
         this.key = key;
-        this.color = color;
-        this.symbol = symbol;
+
+        if (ControlPanel.showColor()) {
+            this.color = Palette.getBiglyMap().get(key).color();
+        } else {
+            this.color = Palette.getBackgroundColor();
+        }
+        if (ControlPanel.showSymbol()) {
+            this.symbol = Palette.getBiglyMap().get(key).symbol();
+        } else {
+            this.symbol = null;
+        }
     }
 
     public int getKey() {

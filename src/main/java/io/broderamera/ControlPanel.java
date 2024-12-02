@@ -12,10 +12,20 @@ public class ControlPanel extends JPanel {
         color = true;
         symbol = false;
 
+        Palette.updatePalette();
+
         JButton buttonA = new JButton("Colors");
         JButton buttonB = new JButton("Symbols");
+        JButton buttonC = new JButton("Swap color");
+        JButton buttonD = new JButton("Fill in");
+        JButton buttonE = new JButton("Reset");
 
-        Palette.updatePalette();
+        // JButton buttonF = new JButton("Save");
+        // JButton buttonG = new JButton("Load");
+        // JButton buttonH = new JButton("Print");
+
+        // JButton buttonI = new JButton("Undo");
+        // JButton buttonJ = new JButton("Redo");
 
         buttonA.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -31,6 +41,7 @@ public class ControlPanel extends JPanel {
                 System.out.println("Color representation is: " + color);
             }
         });
+        buttonA.setBackground(Color.LIGHT_GRAY);
 
         buttonB.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -46,12 +57,90 @@ public class ControlPanel extends JPanel {
                 System.out.println("Symbol representation is: " + symbol);
             }
         });
-
-        buttonA.setBackground(Color.LIGHT_GRAY);
         buttonB.setBackground(Color.WHITE);
 
-        this.add(buttonA);
-        this.add(buttonB);
+        buttonC.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                JFrame frame = new JFrame();
+                frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+                ColorWheel colorWheel = new ColorWheel();
+
+                JButton changeButton = new JButton("Change Color");
+                changeButton.setPreferredSize(new Dimension(136, 20));
+                changeButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        String colorString = ColorWheel.getColorFieldText();
+                        try {
+                            Color color = Color.decode(colorString);
+                            if (Palette.getActiveColor().equals(null)) {
+                                System.out.println("Can not change color because no color has been chosen");
+                                return;
+                            }
+                            if (Palette.getKeyForColor(color) == -1) {
+                                // Change active color for new color
+                                Palette.getBiglyMap().get(Palette.getActiveKey()).setColor(color);
+                                Palette.updatePalette();
+                                Palette.updateActive();
+                                ClickableGridPanel.updateGrid();
+                                frame.dispose();
+                            }
+                        } catch (NumberFormatException ex) {
+                            JOptionPane.showMessageDialog(null, "Invalid color code");
+                        }
+                    }
+                });
+
+                JButton exitButton = new JButton("Exit");
+                exitButton.setPreferredSize(new Dimension(136, 20));
+                exitButton.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        frame.dispose();
+                    }
+                });
+
+                JPanel buttonPanel = new JPanel();
+                buttonPanel.add(changeButton);
+                buttonPanel.add(exitButton);
+
+                frame.add(colorWheel);
+                frame.add(buttonPanel, BorderLayout.SOUTH);
+                frame.pack();
+                frame.setVisible(true);
+            }
+        });
+
+        buttonD.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ClickableGridPanel.changeFillIn();
+                if (ClickableGridPanel.getFillIn()) {
+                    buttonD.setBackground(Color.LIGHT_GRAY);
+                } else {
+                    buttonD.setBackground(Color.WHITE);
+                }
+            }
+        });
+
+        buttonE.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                int option = JOptionPane.showConfirmDialog(null, "Are you sure you want to reset the grid?");
+                if (option != JOptionPane.OK_OPTION) {
+                    return;
+                }
+                ClickableGridPanel.resetGrid();
+            }
+        });
+
+        add(buttonA);
+        add(buttonB);
+        add(buttonC);
+        add(buttonD);        
+        add(buttonE);
+        // this.add(buttonF);        
+        // this.add(buttonG);
+        // this.add(buttonH);  
+        // this.add(buttonI);
     }
 
     public static void setColor() {

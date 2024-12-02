@@ -9,6 +9,7 @@ import java.awt.image.BufferedImage;
 public class ColorWheel extends JPanel {
     private JPanel colorWheelPanel;
     private BufferedImage colorWheelImage;
+    private static JTextField colorField;
 
     public ColorWheel() {
         setLayout(new BorderLayout());
@@ -42,6 +43,10 @@ public class ColorWheel extends JPanel {
             }
         }
         add(colorWheelPanel, BorderLayout.CENTER);
+
+        colorField = new JTextField(25);
+        colorField.setToolTipText("Color format #RRGGBB");
+        add(colorField, BorderLayout.SOUTH);
     }
 
     private class ColorWheelMouseListener extends MouseAdapter {
@@ -52,8 +57,16 @@ public class ColorWheel extends JPanel {
             Color color = new Color(colorWheelImage.getRGB(x, y));
             String hexColor = String.format("#%06X", (0xFFFFFF & color.getRGB()));
             System.out.println("Selected color: " + hexColor);
-            Palette.insertText(hexColor);
+            colorField.setText(hexColor);
         }
+    }
+
+    public static String getColorFieldText() {
+        return colorField.getText();
+    }
+
+    public static void setColorFieldText(String text) {
+        colorField.setText(text);
     }
 
     public static void main(String[] args) {

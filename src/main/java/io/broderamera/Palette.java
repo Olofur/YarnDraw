@@ -10,10 +10,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Palette extends JPanel{
-    public static HashMap<Integer, ColorSymbol> biglyMap;
+    private static HashMap<Integer, ColorSymbol> biglyMap;
 
     private static JPanel palettePanel;
-    private static JTextField colorField;
 
     private static int activeKey;
     private static Color activeColor;
@@ -29,10 +28,8 @@ public class Palette extends JPanel{
 
     public Palette() {
         backgroundColor = Color.WHITE;
-        borderColor = Color.BLACK;
-        
+        borderColor = Color.BLACK;   
         setPreferredSize(new Dimension(300, 600));
-
         // Subpanel of all added colors
         palettePanel = new JPanel();
         palettePanel.setLayout(new GridLayout(0, 3));
@@ -44,9 +41,7 @@ public class Palette extends JPanel{
                 for (int i = 0; i < palettePanel.getComponentCount(); i++) {
                     ColorPanel panel = (ColorPanel) palettePanel.getComponent(i);
                     if (panel.getBounds().contains(x, y)) {
-                        setActiveKey(panel.getKey());
-                        setActiveColor(panel.getColor());
-                        setActiveSymbol(panel.getSymbol());
+                        setActive(panel.getKey(), panel.getColor(), panel.getSymbol());
                         String hexColor = String.format("#%06X", (0xFFFFFF & panel.getColor().getRGB()));
                         insertText(hexColor);
                     }
@@ -56,10 +51,6 @@ public class Palette extends JPanel{
 
         // Hashmap of all added colors and symbols
         biglyMap = new HashMap<Integer, ColorSymbol>();
-
-        // Text field for managing colors
-        colorField = new JTextField(25);
-        add(colorField);
 
         // Initialize add and remove buttons
         add(addButton());
@@ -85,7 +76,7 @@ public class Palette extends JPanel{
         Button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String colorString = colorField.getText();
+                String colorString = ColorWheel.getColorFieldText();
                 try {
                     Color color = Color.decode(colorString);
                     if (getKeyForColor(color) == -1) {
@@ -110,11 +101,15 @@ public class Palette extends JPanel{
         Button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String colorString = colorField.getText();
+                String colorString = ColorWheel.getColorFieldText();
                 if (!biglyMap.isEmpty()) {
                     try {
                         Color color = Color.decode(colorString);
                         int key = getKeyForColor(color);
+                        if (key == 1) {
+                            System.out.println("Cannot remove base color");
+                            return;
+                        }
                         // Add symbol back to stack
                         String symbolName = biglyMap.get(key).symbolName();
                         stack.addItem(symbolName);
@@ -126,6 +121,9 @@ public class Palette extends JPanel{
                             }
                         }
                         updatePalette();
+                        // in case the active color is deleted
+                        updateActive();
+                        ClickableGridPanel.updateGrid();
                     } catch (NumberFormatException ex) {
                         JOptionPane.showMessageDialog(null, "Invalid color code");
                     }
@@ -180,6 +178,9 @@ public class Palette extends JPanel{
 
     public static void updateActive() {
         int key = getActiveKey();
+        if (!biglyMap.keySet().contains(key)) {
+            key = 1;
+        }
         Color keyColor = biglyMap.get(key).color();
         BufferedImage keySymbol = Palette.biglyMap.get(key).symbol();
         if (ControlPanel.showColor()) {
@@ -197,15 +198,14 @@ public class Palette extends JPanel{
     }
 
     public static void setActive(int key, Color color, BufferedImage symbol) {
-        setActiveKey(key);
-        setActiveColor(color);
-        setActiveSymbol(symbol);
+        activeKey = key;
+        System.out.println("Active key changed to: " + activeKey);        setActiveColor(color);
+        activeColor = color;
+        System.out.println("Active color changed to: " + activeColor);
+        activeSymbol = symbol;
+        System.out.println("Active symbol changed");
     }
 
-    public static void setActiveKey(int key) {
-        activeKey = key;
-        System.out.println("Active key changed to: " + activeKey);
-    }
 
     public static int getActiveKey() {
         return activeKey;
@@ -247,14 +247,17 @@ public class Palette extends JPanel{
         return -1;
     }
 
+    public static HashMap<Integer, ColorSymbol> getBiglyMap() {
+        return biglyMap;
+    }
+
     public static void insertText(String text) {
-        colorField.setText(text);
+        ColorWheel.setColorFieldText(text);
     }
 
     public static void main(String[] args) {
         JFrame frame = new JFrame();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
         Palette panel = new Palette();
         frame.add(panel);
         frame.pack();

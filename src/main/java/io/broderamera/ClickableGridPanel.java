@@ -6,12 +6,13 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseMotionAdapter;
-import java.awt.image.BufferedImage;
 
 public class ClickableGridPanel extends JPanel {
     private int zoomLevel = 1;
     private int previousZoomLevel = 1;
     private int zoomMax = 20;
+
+    private static boolean fillIn = false;
 
     private static ColorPanel[][] gridPanels;
 
@@ -37,9 +38,7 @@ public class ClickableGridPanel extends JPanel {
                         if (panel.getBounds().contains(x, y)) {
                             int activeKey = Palette.getActiveKey();
                             if (panel.getKey() != activeKey) {
-                                Color activeColor = Palette.getActiveColor();
-                                BufferedImage activeSymbol = Palette.getActiveSymbol();
-                                panel.setStats(activeKey, activeColor, activeSymbol);
+                                panel.setStats(activeKey);
                                 panel.revalidate();
                                 panel.repaint();
                             }
@@ -59,18 +58,20 @@ public class ClickableGridPanel extends JPanel {
                         ColorPanel panel = gridPanels[i][j];
                         if (panel.getBounds().contains(x, y)) {
                             int activeKey = Palette.getActiveKey();
-                            Color activeColor = Palette.getActiveColor();
-                            BufferedImage activeSymbol = Palette.getActiveSymbol();
-                            if (activeColor == null) {
+                            if (activeKey <= 0) {
                                 JOptionPane.showMessageDialog(null,
                                             "No color has been selected",
                                             "Error",
                                             JOptionPane.WARNING_MESSAGE);
                             }
-                            if (panel.getColor() != activeColor) {
-                                panel.setStats(activeKey, activeColor, activeSymbol);
+                            if (fillIn) {
+                                fillInBaby(i, j, panel.getKey());
+                                return;
+                            }
+                            if (panel.getKey() != activeKey) {
+                                panel.setStats(activeKey);
                             } else {
-                                panel.setStats(1, Palette.getBackgroundColor(), null);
+                                panel.setStats(1);
                             }
                             panel.revalidate();
                             panel.repaint();
@@ -106,7 +107,6 @@ public class ClickableGridPanel extends JPanel {
                 gridPanels[i][j].setPreferredSize(new Dimension(5 * zoomLevel, 5 * zoomLevel));    
             }
         }
-
         int totalWidth = 5 * zoomLevel * gridX;
         int totalHeight = 5 * zoomLevel * gridY;
 
@@ -134,6 +134,8 @@ public class ClickableGridPanel extends JPanel {
         SwingUtilities.convertPointToScreen(cursorPoint, e.getComponent());
         SwingUtilities.convertPointFromScreen(cursorPoint, viewport);
 
+        double zoomRatio = ((double) zoomLevel / previousZoomLevel);
+
         // View (local) coordiates of the cursor
         double cursorX = cursorPoint.getX();
         double cursorY = cursorPoint.getY();
@@ -142,14 +144,13 @@ public class ClickableGridPanel extends JPanel {
         double cursorXInGrid = scrollPane.getHorizontalScrollBar().getValue() + cursorX;
         double cursorYInGrid = scrollPane.getVerticalScrollBar().getValue() + cursorY;
 
-        double zoomRatio = ((double) zoomLevel / previousZoomLevel);
-
         int newX = (int) ((cursorXInGrid * zoomRatio) - cursorX);
         int newY = (int) ((cursorYInGrid * zoomRatio) - cursorY);
-        Point corner = new Point(newX, newY);
 
         scrollPane.getHorizontalScrollBar().setValue(totalWidth / 2 - viewport.getWidth() / 2);
         scrollPane.getVerticalScrollBar().setValue(totalHeight / 2 - viewport.getHeight() / 2);
+
+        Point corner = new Point(newX, newY);
         viewport.setViewPosition(corner);
 
         previousZoomLevel = zoomLevel;
@@ -174,17 +175,10 @@ public class ClickableGridPanel extends JPanel {
             for (int j = 0; j < gridY; j++) {
                 ColorPanel panel = gridPanels[i][j];
                 int key = panel.getKey();
-                Color keyColor = Palette.biglyMap.get(key).color();
-                BufferedImage keySymbol = Palette.biglyMap.get(key).symbol();
-                if (ControlPanel.showColor() && ControlPanel.showSymbol()) {
-                    panel.setStats(key, keyColor, keySymbol);
-                } else if (ControlPanel.showColor() && !ControlPanel.showSymbol()) {
-                    panel.setStats(key, keyColor, null);
-                } else if (!ControlPanel.showColor() && ControlPanel.showSymbol()) {
-                    panel.setStats(key, Palette.getBackgroundColor(), keySymbol);
-                } else {
-                    panel.setStats(key, Palette.getBackgroundColor(), null);
+                if (!Palette.getBiglyMap().keySet().contains(key)) {
+                    key = 1;
                 }
+                panel.setStats(key);
                 panel.revalidate();
                 panel.repaint();
             }
@@ -192,17 +186,55 @@ public class ClickableGridPanel extends JPanel {
         return;
     }
 
-    public void resetGrid() {
-        int option = JOptionPane.showConfirmDialog(null, "Are you sure you want to reset the grid?");
-        if (option != JOptionPane.OK_OPTION) {
-            return;
-        }
+    public static void resetGrid() {
         for (int i = 0; i < gridX; i++) {
             for (int j = 0; j < gridY; j++) {
-                gridPanels[i][j].setBackground(Palette.getBackgroundColor());
-                gridPanels[i][j].setSymbol(null);       
+                ColorPanel panel = gridPanels[i][j];
+                panel.setStats(1);  
+                panel.revalidate();
+                panel.repaint();    
             }
         }
+    }
+
+    public static void fillInBaby(int i, int j, int key) {
+        // recursively go outwards from i,j and fill in the grid
+        // for all pixels of the same color
+        // if the pixel is not filled in yet
+        // if the pixel is already filled in, do nothing
+        
+        for (int k = -1; k <= 1; k = k + 2) {
+            if (i + k >= 0 && i + k < gridX) {
+                ColorPanel panel = gridPanels[i + k][j];
+                int activeKey = Palette.getActiveKey();
+                if (panel.getKey() == key) {
+                    panel.setStats(activeKey);
+                    panel.revalidate();
+                    panel.repaint();
+                    fillInBaby(i + k, j, key);
+                }
+            }
+        }
+        for (int l = -1; l <= 1; l = l + 2) {
+            if (j + l >= 0 && j + l < gridY) {
+                ColorPanel panel = gridPanels[i][j + l];
+                int activeKey = Palette.getActiveKey();
+                if (panel.getKey() == key) {
+                    panel.setStats(activeKey);
+                    panel.revalidate();
+                    panel.repaint();
+                    fillInBaby(i, j + l, key);
+                }
+            }
+        }
+    }
+
+    public static void changeFillIn() {
+        fillIn = !fillIn;
+    }
+
+    public static boolean getFillIn() { 
+        return fillIn;
     }
 
     public static void main(String[] args) {

@@ -1,7 +1,7 @@
 package io.broderamera;
 
 import javax.swing.*;
-//import java.util.ArrayList;
+import java.awt.*;
 
 public class MainFrame {
     public static void main(String[] args) {
@@ -33,6 +33,11 @@ public class MainFrame {
 
         menuPane.setBottomComponent(optionPane);
         mainPane.setRightComponent(menuPane);
+
+        // Set the split pane proportions
+        mainPane.setDividerLocation(.99);
+        mainPane.setResizeWeight(.99);
+        colorWheel.setMinimumSize(new Dimension(300, 300));
 
         // Add the split pane to the frame
         frame.getContentPane().add(mainPane);
