@@ -1,7 +1,8 @@
 package io.broderamera;
 
-import java.awt.*;
-import javax.swing.*;
+import java.awt.Color;
+import java.awt.Graphics;
+import javax.swing.JPanel;
 import java.awt.image.BufferedImage;
 
 public class ColorPanel extends JPanel {

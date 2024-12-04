@@ -2,7 +2,7 @@ package io.broderamera;
 
 import java.awt.image.BufferedImage;
 import java.io.InputStream;
-
+// External
 import org.apache.batik.transcoder.image.ImageTranscoder;
 import org.apache.batik.transcoder.TranscoderException;
 import org.apache.batik.transcoder.TranscoderInput;

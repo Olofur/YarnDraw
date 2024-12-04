@@ -1,13 +1,21 @@
 package io.broderamera;
 
-import java.io.*;
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.image.BufferedImage;
-
 import java.util.HashMap;
 import java.util.Map;
+import java.io.File;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JButton;
+import javax.swing.JOptionPane;
+import javax.swing.BorderFactory;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
 
 public class Palette extends JPanel{
     private static HashMap<Integer, ColorSymbol> biglyMap;
@@ -83,7 +91,7 @@ public class Palette extends JPanel{
                         String item = stack.popItem();
                         BufferedImage symbol = manager.getImage(item);
                         ColorSymbol cs = new ColorSymbol(color, symbol, item);
-                        biglyMap.put(cs.getKey(), cs);
+                        addToBiglyMap(cs.getKey(), cs);
                         updatePalette();
                         }
                 } catch (NumberFormatException ex) {
@@ -178,6 +186,17 @@ public class Palette extends JPanel{
             }
             palettePanel.add(button);
         }
+        palettePanel.revalidate();
+        palettePanel.repaint();
+    }
+
+    public static void addToBiglyMap(int key, ColorSymbol cs) {
+        biglyMap.put(key, cs);
+    }
+
+    public static void clearPalette() {
+        biglyMap.clear();
+        palettePanel.removeAll();
         palettePanel.revalidate();
         palettePanel.repaint();
     }

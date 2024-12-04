@@ -1,17 +1,21 @@
 package io.broderamera;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JButton;
+import javax.swing.JOptionPane;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 
 public class ControlPanel extends JPanel {
@@ -200,6 +204,7 @@ public class ControlPanel extends JPanel {
                     int[] loadDimensions = Arrays.stream(firstLine.split(", ")).mapToInt(Integer::parseInt).toArray();
                     int[] loadKeyGrid = new int[loadDimensions[0] * loadDimensions[1]];
 
+                    ColorSymbol.resetKeyCount();
                     int row = 0;
                     String line;
                     while ((line = reader.readLine()) != null) {
@@ -229,10 +234,18 @@ public class ControlPanel extends JPanel {
                     // redraw all components, grid, palette 
                     // make new instance of the program for new components
 
-                    // 1
-                    //ClickableGridPanel.setGridSize(x, y);
-                    //ClickableGridPanel.initializeGrid();
-
+                    //1
+                    Palette.clearPalette();
+                    for (Map.Entry<Integer, ColorSymbol> entry : loadBiglyMap.entrySet()) {
+                        int key = entry.getKey();
+                        ColorSymbol cs = entry.getValue();
+                        
+                        Palette.addToBiglyMap(key, cs);
+                    }
+                    Palette.updatePalette();
+                    ClickableGridPanel.setGridSize(loadDimensions[0], loadDimensions[1]);
+                    ClickableGridPanel.reinitializeGrid();
+                    ClickableGridPanel.loadKeys(loadKeyGrid);
 
                 } catch (IOException ioe) {
                     System.err.println("Error reading file: " + ioe.getMessage());

@@ -1,6 +1,6 @@
 package io.broderamera;
 
-import java.awt.*;
+import java.awt.Color;
 import java.awt.image.BufferedImage;
 
 class ColorSymbol {

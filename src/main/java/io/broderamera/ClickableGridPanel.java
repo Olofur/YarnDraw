@@ -1,7 +1,18 @@
 package io.broderamera;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.BorderFactory;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JOptionPane;
+import javax.swing.JViewport;
+import javax.swing.JScrollPane;
+import javax.swing.SwingUtilities;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Container;
+import java.awt.Component;
+import java.awt.GridLayout;
+import java.awt.Point;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
@@ -12,6 +23,7 @@ public class ClickableGridPanel extends JPanel {
     private int previousZoomLevel = 1;
     private int zoomMax = 20;
 
+    private static JPanel megaBoy;
     private static ColorPanel[] gridPanels;
     private static int[] keyGrid;
 
@@ -25,9 +37,14 @@ public class ClickableGridPanel extends JPanel {
         addMouseMotionListener(new MouseMotionAdapter() {
             @Override
             public void mouseDragged(MouseEvent e) {
-                int x = e.getX();
-                int y = e.getY();
-                Component component = getComponentAt(x, y);
+                // Convert the cursor position to the coordinates of the JViewport
+                Point cursorPoint = e.getPoint();
+                SwingUtilities.convertPointToScreen(cursorPoint, e.getComponent());
+                SwingUtilities.convertPointFromScreen(cursorPoint, megaBoy);
+ 
+                int x = cursorPoint.x;
+                int y = cursorPoint.y;
+                Component component = megaBoy.getComponentAt(x, y);
                 ColorPanel panel;
                 if (component instanceof ColorPanel) {
                     panel = (ColorPanel) component;
@@ -46,9 +63,14 @@ public class ClickableGridPanel extends JPanel {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                int x = e.getX();
-                int y = e.getY();
-                Component component = getComponentAt(x, y);
+                 // Convert the cursor position to the coordinates of the JViewport
+                Point cursorPoint = e.getPoint();
+                SwingUtilities.convertPointToScreen(cursorPoint, e.getComponent());
+                SwingUtilities.convertPointFromScreen(cursorPoint, megaBoy);
+
+                int x = cursorPoint.x;
+                int y = cursorPoint.y;
+                Component component = megaBoy.getComponentAt(x, y);
                 ColorPanel panel;
                 if (component instanceof ColorPanel) {
                     panel = (ColorPanel) component;
@@ -82,7 +104,7 @@ public class ClickableGridPanel extends JPanel {
             @Override
             public void mouseWheelMoved(MouseWheelEvent e) {
                 int rotation = e.getWheelRotation();
-                if (rotation > 0 && zoomLevel > 0) {
+                if (rotation > 0 && zoomLevel > 1) {
                     zoomLevel--;
                     System.out.println("Zoom level: " + zoomLevel);
                     updateZoom(e);
@@ -105,6 +127,9 @@ public class ClickableGridPanel extends JPanel {
         int totalWidth = 5 * zoomLevel * gridX;
         int totalHeight = 5 * zoomLevel * gridY;
 
+        megaBoy.revalidate();
+        megaBoy.repaint();
+
         revalidate();
         repaint();
 
@@ -117,11 +142,8 @@ public class ClickableGridPanel extends JPanel {
             }
             scrollPane = (JScrollPane) parent;
         } catch (Exception ex) {
-            System.out.print("Window is not zoomable! No parent scrollpane fount...\n");
             return;
         }
-
-        // This could be separate function
 
         // Get the JViewport
         JViewport viewport = scrollPane.getViewport();
@@ -154,8 +176,15 @@ public class ClickableGridPanel extends JPanel {
     }
 
     public void initializeGrid() {
-        removeAll();
-        setLayout(new GridLayout(gridX, gridY));
+        if (megaBoy != null) {
+            removeAll();
+            megaBoy.removeAll();
+        }
+
+        megaBoy = new JPanel();
+        megaBoy.setLayout(new GridLayout(gridX, gridY));
+        megaBoy.setVisible(true);
+        
         gridPanels = new ColorPanel[gridX * gridY];
         keyGrid = new int[gridX * gridY];
 
@@ -164,10 +193,38 @@ public class ClickableGridPanel extends JPanel {
         for (int index = 0; index < gridX * gridY; index++) {
             ColorPanel panel = new ColorPanel();
             panel.setStats(1);
+            panel.setVisible(true);
             panel.setPreferredSize(new Dimension(10, 10));
             panel.setBorder(BorderFactory.createLineBorder(border));
             gridPanels[index] = panel;
-            add(gridPanels[index]);
+
+            megaBoy.add(gridPanels[index]);
+        }
+        add(megaBoy);
+
+        revalidate();
+        repaint();
+    }
+
+    public static void reinitializeGrid() {
+        megaBoy.removeAll();
+        megaBoy.setLayout(new GridLayout(gridX, gridY));
+        megaBoy.setVisible(true);
+        
+        gridPanels = new ColorPanel[gridX * gridY];
+        keyGrid = new int[gridX * gridY];
+
+        Color border = Palette.getBorderColor();
+        gridPanels = new ColorPanel[gridX * gridY];
+        for (int index = 0; index < gridX * gridY; index++) {
+            ColorPanel panel = new ColorPanel();
+            panel.setStats(1);
+            panel.setVisible(true);
+            panel.setPreferredSize(new Dimension(10, 10));
+            panel.setBorder(BorderFactory.createLineBorder(border));
+            gridPanels[index] = panel;
+
+            megaBoy.add(gridPanels[index]);
         }
     }
 
@@ -185,6 +242,15 @@ public class ClickableGridPanel extends JPanel {
             }
         }
         return;
+    }
+
+    public static void loadKeys(int[] grid) {
+        for (int index = 0; index < gridX * gridY; index++) {
+            ColorPanel panel = gridPanels[index];
+            panel.setStats(grid[index]);
+            panel.revalidate();
+            panel.repaint();
+        }
     }
 
     public static void resetGrid() {
@@ -246,8 +312,9 @@ public class ClickableGridPanel extends JPanel {
     }
 
     public static void main(String[] args) {
-        JFrame frame = new JFrame();
         ClickableGridPanel panel = new ClickableGridPanel(100, 100);
+
+        JFrame frame = new JFrame();
         frame.add(panel);
         frame.pack();
         frame.setVisible(true);
