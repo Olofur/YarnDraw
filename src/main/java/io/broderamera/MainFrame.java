@@ -4,17 +4,21 @@ import javax.swing.*;
 import java.awt.*;
 
 public class MainFrame {
-    public static void main(String[] args) {
+    public MainFrame(int x, int y) {
+        init(x, y);
+    }
+
+    public MainFrame() {
+        init(100, 100);
+    }
+
+    public void init(int x, int y) {
         JFrame frame = new JFrame();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         JSplitPane mainPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         JSplitPane menuPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         JSplitPane optionPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-
-        // Create grid panel
-        int x = 100; //Integer.parseInt(JOptionPane.showInputDialog("Enter x dimension"));
-        int y = 100; //Integer.parseInt(JOptionPane.showInputDialog("Enter y dimension"));
 
         // Create color wheel panel
         ColorWheel colorWheel = new ColorWheel();
@@ -44,5 +48,9 @@ public class MainFrame {
 
         frame.pack();
         frame.setVisible(true);
+    }
+
+    public static void main(String[] args) {
+        new MainFrame(100, 100);
     }
 }
