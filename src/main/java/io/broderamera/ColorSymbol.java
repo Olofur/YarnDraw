@@ -37,6 +37,10 @@ class ColorSymbol {
         this.symbolName = symbolName;
     }
 
+    public static void resetKeyCount() {
+        keyCount = 1;
+    }
+
     public int getKey() {
         return key;
     }
