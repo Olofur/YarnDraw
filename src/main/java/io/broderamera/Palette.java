@@ -58,9 +58,8 @@ public class Palette extends JPanel{
         add(palettePanel);
 
         // Initialize stack
-        stack = new SvgStack();
+        stack = initializeNewStack();
         manager = new ImageManager();
-        initializeStack();
 
         // Hashmap of all added colors and symbols
         biglyMap = new HashMap<Integer, ColorSymbol>();
@@ -153,7 +152,8 @@ public class Palette extends JPanel{
         return Button;
     }
 
-    private void initializeStack() {
+    public static SvgStack initializeNewStack() {
+        SvgStack stack = new SvgStack();
         File directory = new File("./src/main/resources");
         File[] files = directory.listFiles();
         String item;
@@ -163,6 +163,7 @@ public class Palette extends JPanel{
                 stack.addItem(item);
             }
         }
+        return stack;
     }
 
     public static void updatePalette() {
