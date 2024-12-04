@@ -1,9 +1,18 @@
 package io.broderamera;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
+
+import java.awt.image.BufferedImage;
 
 public class ControlPanel extends JPanel {
     private static boolean color;
@@ -23,14 +32,15 @@ public class ControlPanel extends JPanel {
         JButton buttonD = new JButton("Fill in");
         JButton buttonE = new JButton("Reset");
 
-        // JButton buttonF = new JButton("Save");
-        // JButton buttonG = new JButton("Load");
+        JButton buttonF = new JButton("Save");
+        JButton buttonG = new JButton("Load");
         // JButton buttonH = new JButton("Print");
 
         // JButton buttonI = new JButton("Undo");
         // JButton buttonJ = new JButton("Redo");
 
         buttonA.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent e) {
                 if (color) {
                     buttonA.setBackground(Color.WHITE);
@@ -47,6 +57,7 @@ public class ControlPanel extends JPanel {
         buttonA.setBackground(Color.LIGHT_GRAY);
 
         buttonB.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent e) {
                 if (symbol) {
                     buttonB.setBackground(Color.WHITE);
@@ -63,6 +74,7 @@ public class ControlPanel extends JPanel {
         buttonB.setBackground(Color.WHITE);
 
         buttonC.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent e) {
                 JFrame frame = new JFrame();
                 frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -116,6 +128,7 @@ public class ControlPanel extends JPanel {
         buttonC.setBackground(Color.WHITE);
 
         buttonD.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent e) {
                 changeFillIn();
                 if (getFillIn()) {
@@ -128,6 +141,7 @@ public class ControlPanel extends JPanel {
         buttonD.setBackground(Color.WHITE);
 
         buttonE.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent e) {
                 int option = JOptionPane.showConfirmDialog(null, "Are you sure you want to reset the grid?");
                 if (option != JOptionPane.OK_OPTION) {
@@ -138,22 +152,108 @@ public class ControlPanel extends JPanel {
         });
         buttonE.setBackground(Color.WHITE);
 
-        // to be implemented
-        // buttonF.addActionListener(new ActionListener() {
-        //     public void actionPerformed(ActionEvent e) {
-        //         int[][] keyMap = ClickableGridPanel.getKeyMap();
-        //         HashMap<Integer, ColorSymbol> biglyMap = Palette.getBiglyMap();
-        //     }
-        // });
-        // buttonF.setBackground(Color.WHITE);
+        buttonF.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int[] dimensions = ClickableGridPanel.getGridSize();
+                int[] keyGrid = ClickableGridPanel.getKeyGrid();
+                HashMap<Integer, ColorSymbol> biglyMap = Palette.getBiglyMap();
+
+                String filename = "saving.csv";
+                try (FileWriter writer = new FileWriter(filename)) {
+                    // Save dimensions at the top of the file
+                    writer.write(dimensions[0] + ", " + dimensions[1] + "\n");
+                    // Save color code mappings at the top of the file
+                    for (Map.Entry<Integer, ColorSymbol> entry : biglyMap.entrySet()) {
+                        int key = entry.getKey();
+                        Color color = entry.getValue().color();
+                        String hexColor = String.format("#%06X", (0xFFFFFF & color.getRGB()));
+                        writer.write(key + ", " + hexColor + "\n");
+                    }
+                    // Save key map afterwards
+                    for (int index = 0; index < keyGrid.length; index++) {
+                        int column = index % dimensions[1];
+                        if (column == 0 && index != 0) {
+                            writer.write("\n");
+                        }
+                        writer.write(keyGrid[index] + ", ");
+                    }
+                } catch (IOException error) {
+                    System.err.println("Error writing to file: " + error.getMessage());
+                }
+                System.out.println("Saved to " + filename);
+            }
+        });
+        buttonF.setBackground(Color.WHITE);
+
+        buttonG.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                HashMap<Integer, ColorSymbol> loadBiglyMap  = new HashMap<Integer, ColorSymbol>();
+
+                SvgStack loadStack = Palette.initializeNewStack(); 
+                ImageManager loadManager = new ImageManager();
+
+                String filename = "saving.csv";
+                try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
+                    String firstLine = reader.readLine();
+                    int[] loadDimensions = Arrays.stream(firstLine.split(", ")).mapToInt(Integer::parseInt).toArray();
+                    int[] loadKeyGrid = new int[loadDimensions[0] * loadDimensions[1]];
+
+                    int row = 0;
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        if (line.contains("#")) {
+                            String colorString = line.split(", ")[1];
+                            Color color = Color.decode(colorString);
+                            String item = loadStack.popItem();
+                            BufferedImage symbol = loadManager.getImage(item);
+                            ColorSymbol cs =new ColorSymbol(color, symbol, item);
+
+                            loadBiglyMap.put(cs.getKey(), cs);
+                        } else {
+                            int[] lineValues = Arrays.stream(line.split(", ")).mapToInt(Integer::parseInt).toArray();
+        
+                            // copy the elements to the desired part of the original array
+                            System.arraycopy(lineValues, 0, loadKeyGrid, row, lineValues.length);
+                            
+                            // or use IntStream.forEach
+                            int thisRow = row;
+                            Arrays.stream(line.split(", ")).mapToInt(Integer::parseInt)
+                                .forEach(value -> loadKeyGrid[thisRow] = value);
+                            
+                            row += lineValues.length;
+                        }
+                    }
+                    // two possible approaches ; 
+                    // redraw all components, grid, palette 
+                    // make new instance of the program for new components
+
+                    // 1
+                    //ClickableGridPanel.setGridSize(x, y);
+                    //ClickableGridPanel.initializeGrid();
+
+
+                } catch (IOException ioe) {
+                    System.err.println("Error reading file: " + ioe.getMessage());
+                }
+               // clear biglyMap
+               // read file into keyGrid and biglyMap
+               // paint grid with keyGrid
+               // update palette
+               // update active
+               // update grid
+            }
+        });
+        buttonG.setBackground(Color.WHITE);
 
         add(buttonA);
         add(buttonB);
         add(buttonC);
         add(buttonD);        
         add(buttonE);
-        // add(buttonF);        
-        // add(buttonG);
+        add(buttonF);        
+        add(buttonG);
         // add(buttonH);  
         // add(buttonI);
         // add(buttonJ);
