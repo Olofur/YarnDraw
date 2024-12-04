@@ -13,22 +13,17 @@ public class ClickableGridPanel extends JPanel {
     private int zoomMax = 20;
 
     private static ColorPanel[] gridPanels;
-    private static int[][] keyMap;
+    private static int[] keyGrid;
 
     private static int gridX;
     private static int gridY;
 
     public ClickableGridPanel(int x, int y) {
-        gridX = x;
-        gridY = y;
-
-        setLayout(new GridLayout(gridX, gridY));
-        gridPanels = new ColorPanel[gridX * gridY];
-        keyMap = new int[gridX][gridY];
-
+        setGridSize(x, y);
         initializeGrid();
 
         addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
             public void mouseDragged(MouseEvent e) {
                 int x = e.getX();
                 int y = e.getY();
@@ -159,6 +154,11 @@ public class ClickableGridPanel extends JPanel {
     }
 
     public void initializeGrid() {
+        removeAll();
+        setLayout(new GridLayout(gridX, gridY));
+        gridPanels = new ColorPanel[gridX * gridY];
+        keyGrid = new int[gridX * gridY];
+
         Color border = Palette.getBorderColor();
         gridPanels = new ColorPanel[gridX * gridY];
         for (int index = 0; index < gridX * gridY; index++) {
@@ -229,13 +229,20 @@ public class ClickableGridPanel extends JPanel {
         }
     }
 
-    public static int[][] getKeyMap() { 
+    public static int[] getGridSize() {
+        return new int[]{gridX, gridY};
+    }
+
+    public static void setGridSize(int x, int y) {
+        gridX = x;
+        gridY = y;
+    }
+
+    public static int[] getKeyGrid() { 
         for (int index = 0; index < gridX * gridY; index++) {
-            int i = index / gridY;
-            int j = index % gridY;
-            keyMap[i][j] = gridPanels[index].getKey();
+            keyGrid[index] = gridPanels[index].getKey();
         }
-        return keyMap;
+        return keyGrid;
     }
 
     public static void main(String[] args) {
