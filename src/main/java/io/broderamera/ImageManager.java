@@ -11,9 +11,9 @@ import org.apache.batik.transcoder.TranscoderOutput;
 /**
  * Inspired by
  * @link https://web.archive.org/web/20131215231214/http://bbgen.net/blog/2011/06/java-svg-to-bufferedimage/
+ * @author Olofur
  */
 public class ImageManager extends ImageTranscoder {
-
     private BufferedImage image = null;
 
     @Override
