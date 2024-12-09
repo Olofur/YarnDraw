@@ -4,45 +4,56 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 
+/**
+* @author Olofur
+*/
 public class ControlPanel extends JPanel {
     private static boolean color;
     private static boolean symbol;
-    private static boolean fillIn;
+    private static boolean fillInActive;
+    
+    private String directoryPath = System.getProperty("user.dir");
     
     public ControlPanel() {
+        this(200);
+    }
+    
+    public ControlPanel(int width) {
         color = true;
         symbol = false;
-        fillIn = false;
-
+        fillInActive = false;
+        
         Palette.updatePalette();
-
+        
         JButton buttonA = new JButton("Colors");
         JButton buttonB = new JButton("Symbols");
         JButton buttonC = new JButton("Swap color");
         JButton buttonD = new JButton("Fill in");
         JButton buttonE = new JButton("Reset");
-
         JButton buttonF = new JButton("Save");
         JButton buttonG = new JButton("Load");
         // JButton buttonH = new JButton("Print");
-
         // JButton buttonI = new JButton("Undo");
         // JButton buttonJ = new JButton("Redo");
-
+        
         buttonA.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -51,15 +62,16 @@ public class ControlPanel extends JPanel {
                 } else {
                     buttonA.setBackground(Color.LIGHT_GRAY);
                 }
-                setColor();
+                int key = Palette.getActiveKey();
+                flipDisplayColor();
                 Palette.updatePalette();
-                Palette.updateActive();
-                ClickableGridPanel.updateGrid();
+                Palette.setActive(key);
+                ZoomableClickableGridPanel activePanel = ZoomableClickableGridPanelTabs.getPanel(Palette.getActiveClickableGridPanel());
+                activePanel.updateGrid();
                 System.out.println("Color representation is: " + color);
             }
         });
-        buttonA.setBackground(Color.LIGHT_GRAY);
-
+        
         buttonB.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -68,82 +80,35 @@ public class ControlPanel extends JPanel {
                 } else {
                     buttonB.setBackground(Color.LIGHT_GRAY);
                 }
-                setSymbol();
+                int key = Palette.getActiveKey();
+                flipDisplaySymbol();
                 Palette.updatePalette();
-                Palette.updateActive();
-                ClickableGridPanel.updateGrid();
+                Palette.setActive(key);
+                ZoomableClickableGridPanel activePanel = ZoomableClickableGridPanelTabs.getPanel(Palette.getActiveClickableGridPanel());
+                activePanel.updateGrid();
                 System.out.println("Symbol representation is: " + symbol);
             }
         });
-        buttonB.setBackground(Color.WHITE);
-
+        
         buttonC.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JFrame frame = new JFrame();
-                frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-
-                ColorWheel colorWheel = new ColorWheel();
-
-                JButton changeButton = new JButton("Change Color");
-                changeButton.setPreferredSize(new Dimension(136, 20));
-                changeButton.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        String colorString = ColorWheel.getColorFieldText();
-                        try {
-                            Color color = Color.decode(colorString);
-                            if (Palette.getActiveColor().equals(null)) {
-                                System.out.println("Can not change color because no color has been chosen");
-                                return;
-                            }
-                            if (Palette.getKeyForColor(color) == -1) {
-                                // Change active color for new color
-                                Palette.getBiglyMap().get(Palette.getActiveKey()).setColor(color);
-                                Palette.updatePalette();
-                                Palette.updateActive();
-                                ClickableGridPanel.updateGrid();
-                                frame.dispose();
-                            }
-                        } catch (NumberFormatException ex) {
-                            JOptionPane.showMessageDialog(null, "Invalid color code");
-                        }
-                    }
-                });
-
-                JButton exitButton = new JButton("Exit");
-                exitButton.setPreferredSize(new Dimension(136, 20));
-                exitButton.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        frame.dispose();
-                    }
-                });
-
-                JPanel buttonPanel = new JPanel();
-                buttonPanel.add(changeButton);
-                buttonPanel.add(exitButton);
-
-                frame.add(colorWheel);
-                frame.add(buttonPanel, BorderLayout.SOUTH);
-                frame.pack();
-                frame.setVisible(true);
+                swapColor();
             }
         });
-        buttonC.setBackground(Color.WHITE);
-
+        
         buttonD.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                changeFillIn();
-                if (getFillIn()) {
+                flipFillInActive();
+                if (isFillInActive()) {
                     buttonD.setBackground(Color.LIGHT_GRAY);
                 } else {
                     buttonD.setBackground(Color.WHITE);
                 }
             }
         });
-        buttonD.setBackground(Color.WHITE);
-
+        
         buttonE.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -151,115 +116,33 @@ public class ControlPanel extends JPanel {
                 if (option != JOptionPane.OK_OPTION) {
                     return;
                 }
-                ClickableGridPanel.resetGrid();
+                ZoomableClickableGridPanel activePanel = ZoomableClickableGridPanelTabs.getPanel(Palette.getActiveClickableGridPanel());
+                activePanel.resetGrid();
             }
         });
-        buttonE.setBackground(Color.WHITE);
-
+        
         buttonF.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                int[] dimensions = ClickableGridPanel.getGridSize();
-                int[] keyGrid = ClickableGridPanel.getKeyGrid();
-                HashMap<Integer, ColorSymbol> biglyMap = Palette.getBiglyMap();
-
-                String filename = "saving.csv";
-                try (FileWriter writer = new FileWriter(filename)) {
-                    // Save dimensions at the top of the file
-                    writer.write(dimensions[0] + ", " + dimensions[1] + "\n");
-                    // Save color code mappings at the top of the file
-                    for (Map.Entry<Integer, ColorSymbol> entry : biglyMap.entrySet()) {
-                        int key = entry.getKey();
-                        Color color = entry.getValue().color();
-                        String hexColor = String.format("#%06X", (0xFFFFFF & color.getRGB()));
-                        writer.write(key + ", " + hexColor + "\n");
-                    }
-                    // Save key map afterwards
-                    for (int index = 0; index < keyGrid.length; index++) {
-                        int column = index % dimensions[1];
-                        if (column == 0 && index != 0) {
-                            writer.write("\n");
-                        }
-                        writer.write(keyGrid[index] + ", ");
-                    }
-                } catch (IOException error) {
-                    System.err.println("Error writing to file: " + error.getMessage());
-                }
-                System.out.println("Saved to " + filename);
+                savePatternToFile();
             }
         });
-        buttonF.setBackground(Color.WHITE);
-
+        
         buttonG.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                HashMap<Integer, ColorSymbol> loadBiglyMap  = new HashMap<Integer, ColorSymbol>();
-
-                SvgStack loadStack = Palette.initializeNewStack(); 
-                ImageManager loadManager = new ImageManager();
-
-                String filename = "saving.csv";
-                try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
-                    String firstLine = reader.readLine();
-                    int[] loadDimensions = Arrays.stream(firstLine.split(", ")).mapToInt(Integer::parseInt).toArray();
-                    int[] loadKeyGrid = new int[loadDimensions[0] * loadDimensions[1]];
-
-                    ColorSymbol.resetKeyCount();
-                    int row = 0;
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        if (line.contains("#")) {
-                            String colorString = line.split(", ")[1];
-                            Color color = Color.decode(colorString);
-                            String item = loadStack.popItem();
-                            BufferedImage symbol = loadManager.getImage(item);
-                            ColorSymbol cs =new ColorSymbol(color, symbol, item);
-
-                            loadBiglyMap.put(cs.getKey(), cs);
-                        } else {
-                            int[] lineValues = Arrays.stream(line.split(", ")).mapToInt(Integer::parseInt).toArray();
-        
-                            // copy the elements to the desired part of the original array
-                            System.arraycopy(lineValues, 0, loadKeyGrid, row, lineValues.length);
-                            
-                            // or use IntStream.forEach
-                            int thisRow = row;
-                            Arrays.stream(line.split(", ")).mapToInt(Integer::parseInt)
-                                .forEach(value -> loadKeyGrid[thisRow] = value);
-                            
-                            row += lineValues.length;
-                        }
-                    }
-                    // two possible approaches ; 
-                    // redraw all components, grid, palette 
-                    // make new instance of the program for new components
-
-                    //1
-                    Palette.clearPalette();
-                    for (Map.Entry<Integer, ColorSymbol> entry : loadBiglyMap.entrySet()) {
-                        int key = entry.getKey();
-                        ColorSymbol cs = entry.getValue();
-                        
-                        Palette.addToBiglyMap(key, cs);
-                    }
-                    Palette.updatePalette();
-                    ClickableGridPanel.setGridSize(loadDimensions[0], loadDimensions[1]);
-                    ClickableGridPanel.reinitializeGrid();
-                    ClickableGridPanel.loadKeys(loadKeyGrid);
-
-                } catch (IOException ioe) {
-                    System.err.println("Error reading file: " + ioe.getMessage());
-                }
-               // clear biglyMap
-               // read file into keyGrid and biglyMap
-               // paint grid with keyGrid
-               // update palette
-               // update active
-               // update grid
+                loadPatternFromFile();
             }
         });
+        
+        buttonA.setBackground(Color.LIGHT_GRAY);
+        buttonB.setBackground(Color.WHITE);
+        buttonC.setBackground(Color.WHITE);
+        buttonD.setBackground(Color.WHITE);
+        buttonE.setBackground(Color.WHITE);
+        buttonF.setBackground(Color.WHITE);
         buttonG.setBackground(Color.WHITE);
-
+        
         add(buttonA);
         add(buttonB);
         add(buttonC);
@@ -270,35 +153,246 @@ public class ControlPanel extends JPanel {
         // add(buttonH);  
         // add(buttonI);
         // add(buttonJ);
+        
+        setLayout(new GridLayout(3, 3, 5, 10));
     }
+    
+    private void swapColor() {
+        JFrame swapColorFrame = new JFrame();
+        
+        ColorWheel colorWheel = new ColorWheel(300);
+        JButton changeButton = new JButton("Change Color");
+        changeButton.setPreferredSize(new Dimension(136, 20));
+        changeButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String colorString = ColorWheel.getColorFieldText();
+                try {
+                    Color color = Color.decode(colorString);
+                    int key = Palette.getKeyForColor(color);
+                    if (Palette.getActiveColor().equals(null)) {
+                        System.out.println("Can not change color because no color has been chosen");
+                        return;
+                    }
+                    if (key == -1) {
+                        // Change active color for new color
+                        Palette.getcolorSymbolMap().get(Palette.getActiveKey()).setColor(color);
+                        Palette.updatePalette();
+                        Palette.setActive(key);
+                        ZoomableClickableGridPanel activePanel = ZoomableClickableGridPanelTabs.getPanel(Palette.getActiveClickableGridPanel());
+                        activePanel.updateGrid();
+                        swapColorFrame.dispose();
+                    }
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(null, "Invalid color code");
+                }
+            }
+        });
+        
+        JButton exitButton = new JButton("Exit");
+        exitButton.setPreferredSize(new Dimension(136, 20));
+        exitButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                swapColorFrame.dispose();
+            }
+        });
+        
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(changeButton);
+        buttonPanel.add(exitButton);
+        
+        swapColorFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        swapColorFrame.add(colorWheel);
+        swapColorFrame.add(buttonPanel, BorderLayout.SOUTH);
+        swapColorFrame.pack();
+        swapColorFrame.setVisible(true);
+    }
+    
+    public void savePatternToFile() {
+        String filename = JOptionPane.showInputDialog("Enter a filename:");
 
-    public static void setColor() {
+        if (filename == null) {
+            return;
+        }
+        if (!filename.endsWith(".csv")) {
+            filename += ".csv";
+        }
+        File directory = new File(directoryPath);
+        File file = new File(directory, filename);
+        if (file.exists()) {
+            int option = JOptionPane.showConfirmDialog(null, "File already exists. Do you want to overwrite it?");
+            if (option != JOptionPane.OK_OPTION) {
+                return;
+            }
+        }
+        filename = directoryPath + "/savefiles/" + filename;
+
+        ZoomableClickableGridPanel activePanel = ZoomableClickableGridPanelTabs.getPanel(Palette.getActiveClickableGridPanel());
+        int[] dimensions = activePanel.getGridSize();
+        int[] keyGrid = activePanel.getKeyGrid();
+        HashMap<Integer, ColorSymbol> colorSymbolMap = Palette.getcolorSymbolMap();
+        
+        try (FileWriter writer = new FileWriter(filename)) {
+            // Save dimensions at the top of the file
+            writer.write(dimensions[0] + ", " + dimensions[1] + "\n");
+            // Save color code mappings at the top of the file
+            for (Map.Entry<Integer, ColorSymbol> entry : colorSymbolMap.entrySet()) {
+                int key = entry.getKey();
+                Color color = entry.getValue().color();
+                String hexColor = Palette.getHexFromColor(color);
+                writer.write(key + ", " + hexColor + "\n");
+            }
+            // Save key map afterwards
+            for (int index = 0; index < keyGrid.length; index++) {
+                int column = index % dimensions[1];
+                if (column == 0 && index != 0) {
+                    writer.write("\n");
+                }
+                writer.write(keyGrid[index] + ", ");
+            }
+        } catch (IOException error) {
+            System.err.println("Error writing to file: " + error.getMessage());
+        }
+        System.out.println("Saved to " + filename);
+    }
+    
+    public void loadPatternFromFile() {
+        String filename = getLoadFile();
+        if (filename == null) {
+            return;
+        }
+
+        // SvgStack loadStack = Palette.initializeNewStack(); 
+        // ImageManager loadManager = new ImageManager();
+        
+        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
+            String firstLine = reader.readLine();
+            int[] loadDimensions = Arrays.stream(firstLine.split(", ")).mapToInt(Integer::parseInt).toArray();
+            int[] loadKeyGrid = new int[loadDimensions[0] * loadDimensions[1]];
+            HashMap<Integer, ColorSymbol> loadcolorSymbolMap  = new HashMap<Integer, ColorSymbol>();
+            HashMap<Integer, Integer> loadKeyMap = new HashMap<Integer, Integer>();
+            
+            int row = 0;
+            String line;
+            while ((line = reader.readLine()) != null) {
+                // First part containing color map
+                if (line.contains("#")) {
+                    int originalKey = Integer.parseInt(line.split(", ")[0]);
+                    String colorString = line.split(", ")[1];
+                    Color color = Color.decode(colorString);
+                    String item = Palette.getStack().popItem();
+                    BufferedImage symbol = Palette.getManager().getImage(item);
+                    ColorSymbol colorSymbol = new ColorSymbol(color, symbol, item);
+                    
+                    loadcolorSymbolMap.put(colorSymbol.getKey(), colorSymbol);
+                    loadKeyMap.put(originalKey, colorSymbol.getKey());
+
+                    // Second part containing key grid
+                } else {
+                    int thisRow = row;
+                    int[] keyGridValues = Arrays.stream(line.split(", ")).mapToInt(Integer::parseInt).toArray();
+                    
+                    // copy the elements to the desired part of the original array
+                    System.arraycopy(keyGridValues, 0, loadKeyGrid, row, keyGridValues.length);
+                    Arrays.stream(line.split(", ")).mapToInt(Integer::parseInt)
+                    .forEach(value -> loadKeyGrid[thisRow] = value);
+                    
+                    row += keyGridValues.length;
+                }
+            }
+            // Remap the loadKeyGrid according to the loadKeyMap - mapping save file keys to active keys
+            for (int index = 0; index < loadKeyGrid.length; index++) {
+                int key = loadKeyGrid[index];
+                loadKeyGrid[index] = loadKeyMap.get(key);
+            }
+
+            for (Map.Entry<Integer, ColorSymbol> entry : loadcolorSymbolMap.entrySet()) {
+                for (Map.Entry<Integer, ColorSymbol> matchingEntry : Palette.getcolorSymbolMap().entrySet()) {
+                    if (matchingEntry.getValue().color().equals(entry.getValue().color())) {
+                        continue;
+                    }
+                }
+                int key = entry.getKey();
+                ColorSymbol colorSymbol = entry.getValue();
+                Palette.insertcolorSymbolMap(key, colorSymbol);
+            }
+            Palette.updatePalette();
+            ZoomableClickableGridPanel activePanel = ZoomableClickableGridPanelTabs.getPanel(Palette.getActiveClickableGridPanel());
+            activePanel.setGridSize(loadDimensions[0], loadDimensions[1]);
+            activePanel.reinitializeGrid();
+            activePanel.loadKeyGrid(loadKeyGrid);
+            
+        } catch (IOException ioe) {
+            System.err.println("Error reading file: " + ioe.getMessage());
+        }
+    }
+    
+    private String getLoadFile() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Select a file to load");
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        fileChooser.setFileFilter(new FileNameExtensionFilter("CSV Files", "csv"));
+        
+        // Set the chooser to savefiles directory
+        String startDirectory = directoryPath + "/savefiles";
+        File directory = new File(startDirectory);
+        if (directory.exists() && directory.isDirectory()) {
+            fileChooser.setCurrentDirectory(directory);
+        } else {
+            System.out.println("Invalid start directory: " + startDirectory);
+        }
+        
+        // Show the file chooser dialog
+        int returnValue = fileChooser.showOpenDialog(null);
+        if (returnValue == JFileChooser.APPROVE_OPTION) {
+            // Get the selected file
+            File selectedFile = fileChooser.getSelectedFile();
+            
+            // Check if the file exists
+            if (selectedFile.exists()) {
+                try {
+                    return selectedFile.getAbsolutePath();
+                } catch (Exception e) {
+                    System.err.println("Error getting file path: " + e.getMessage());
+                }
+            } else {
+                JOptionPane.showMessageDialog(null, "Selected file does not exist.");
+            }
+        } else {
+            JOptionPane.showMessageDialog(null, "No file selected.");
+        }
+        return null;
+    }
+    
+    public static void flipDisplayColor() {
         ControlPanel.color = !ControlPanel.color;
     }
-
-    public static boolean showColor() {
+    
+    public static boolean displayColor() {
         return color;
     }
     
-    public static void setSymbol() {
+    public static void flipDisplaySymbol() {
         ControlPanel.symbol = !ControlPanel.symbol;
     }
-
-    public static boolean showSymbol() {
+    
+    public static boolean displaySymbol() {
         return symbol;
     }
-
-    public static void changeFillIn() {
-        ControlPanel.fillIn = !ControlPanel.fillIn;
+    
+    public static void flipFillInActive() {
+        ControlPanel.fillInActive = !ControlPanel.fillInActive;
     }
-
-    public static boolean getFillIn() {
-        return fillIn;
+    
+    public static boolean isFillInActive() {
+        return fillInActive;
     }
-
+    
     public void main(String[] args) {
-        JFrame frame = new JFrame();
         ControlPanel panel = new ControlPanel();
+        
+        JFrame frame = new JFrame();
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.add(panel);
         frame.pack();
         frame.setVisible(true);
