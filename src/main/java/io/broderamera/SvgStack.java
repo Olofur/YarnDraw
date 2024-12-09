@@ -2,6 +2,9 @@ package io.broderamera;
 
 import java.util.ArrayList;
 
+/**
+ * @author Olofur
+ */
 public class SvgStack {
     public ArrayList<String> stack;
 
