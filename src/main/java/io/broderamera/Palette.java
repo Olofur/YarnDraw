@@ -18,6 +18,8 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 
 /**
+ * Represents the palette that is used to select active colors and color symbol.
+ * 
  * @author Olofur
  */
 public class Palette extends JPanel{
@@ -35,10 +37,18 @@ public class Palette extends JPanel{
 
     private static JPanel palettePanel;
 
+    /**
+     * Default constructor for the Palette class.
+     */
     public Palette() {
         this(200);
     }
 
+    /**
+     * Constructor for the Palette class with a specified width.
+     * 
+     * @param width
+     */
     public Palette(int width) {
         activeClickableGridPanel = 0;
 
@@ -78,6 +88,11 @@ public class Palette extends JPanel{
         updatePalette();
     }
 
+    /**
+     * Method to create an add color button
+     * 
+     * @return JButton
+     */
     public JButton addButton() {
         JButton Button = new JButton("Add Color");
         Button.setPreferredSize(new Dimension(136, 20));
@@ -103,6 +118,11 @@ public class Palette extends JPanel{
         return Button;
     }
 
+    /**
+     * Method to create a remove color button
+     * 
+     * @return JButton
+     */
     public JButton removeButton() {
         JButton Button = new JButton("Remove Color");
         Button.setPreferredSize(new Dimension(136, 20));
@@ -143,6 +163,13 @@ public class Palette extends JPanel{
         return Button;
     }
 
+    /**
+     * Method to create a color button for the palette and with a specified
+     * color
+     * 
+     * @param color
+     * @return ColorPanel
+     */
     public static ColorPanel colorButton(Color color) {
         ColorPanel Button = new ColorPanel();
         int key = getKeyForColor(color);
@@ -151,6 +178,11 @@ public class Palette extends JPanel{
         return Button;
     }
 
+    /**
+     * Method to initialize a new stack of svg files containing the symbols
+     * 
+     * @return
+     */
     public static SvgStack initializeNewStack() {
         SvgStack stack = new SvgStack();
         File directory = new File("./src/main/resources");
@@ -165,6 +197,9 @@ public class Palette extends JPanel{
         return stack;
     }
 
+    /**
+     * Method to update the palette
+     */
     public static void updatePalette() {
         // Do not remuve all, instead see what has changed and update only that
         palettePanel.removeAll();
@@ -181,6 +216,9 @@ public class Palette extends JPanel{
         palettePanel.repaint();
     }
 
+    /**
+     * Method to clear the palette of colors
+     */
     public static void clearPalette() {
         colorSymbolMap.clear();
         palettePanel.removeAll();
@@ -188,6 +226,9 @@ public class Palette extends JPanel{
         palettePanel.repaint();
     }
 
+    /**
+     * Method to update the border highlight
+     */
     public static void updateBorderHighlight() {
         for (int i = 0; i < palettePanel.getComponentCount(); i++) {
             ColorPanel panel = (ColorPanel) palettePanel.getComponent(i);
@@ -199,6 +240,11 @@ public class Palette extends JPanel{
         }
     }
 
+    /**
+     * Method to set the active key
+     * 
+     * @param key
+     */
     public static void setActive(int key) {
         if (colorSymbolMap.keySet().contains(key)) {
             activeKey = key;
@@ -220,46 +266,102 @@ public class Palette extends JPanel{
         System.out.println("Active symbol changed");
     }
 
+    /**
+     * Method to set the active clickable grid panel
+     * 
+     * @param key
+     */
     public static void setActiveClickableGridPanel(int key) {
         activeClickableGridPanel = key;
     }
 
+    /**
+     * Method to get the active clickable grid panel
+     * 
+     * @return
+     */
     public static int getActiveClickableGridPanel() {
         return activeClickableGridPanel;
     }
 
+    /**
+     * Method to get the active key
+     * 
+     * @return int
+     */
     public static int getActiveKey() {
         return activeKey;
     }
 
+    /**
+     * Method to get the active color
+     * 
+     * @return Color
+     */
     public static Color getActiveColor() {
         return activeColor;
     }
 
+    /**
+     * Method to get the active symbol
+     *  
+     * @return BufferedImage
+     */
     public static BufferedImage getActiveSymbol() {
         return activeSymbol;
     }
 
+    /**
+     * Method to get the background color
+     * 
+     * @return Color
+     */
     public static Color getBackgroundColor() {
         return backgroundColor;
     }
 
+    /**
+     * Method to get the border color
+     * 
+     * @return Color
+     */
     public static Color getBorderColor() {
         return borderColor;
     }
 
+    /**
+     * Method to get the symbol name stack
+     * 
+     * @return SvgStack
+     */
     public static SvgStack getStack() {
         return stack;
     }
 
+    /**
+     * Method to get the image manager
+     * 
+     * @return ImageManager
+     */
     public static ImageManager getManager() {
         return manager;
     }
 
+    /**
+     * Method to get the color symbol map
+     * 
+     * @return HashMap<Integer, ColorSymbol>
+     */
     public static HashMap<Integer, ColorSymbol> getcolorSymbolMap() {
         return colorSymbolMap;
     }
 
+    /**
+     * Method to get the key for a given color from the color symbol map
+     * 
+     * @param color
+     * @return int
+     */
     public static int getKeyForColor(Color color) {
         for (Map.Entry<Integer, ColorSymbol> entry : colorSymbolMap.entrySet()) {
             if (entry.getValue().color().equals(color)) {
@@ -270,14 +372,31 @@ public class Palette extends JPanel{
         return -1;
     }
 
+    /**
+     * Method to get the hex code of format #RRGGBB for a given color
+     * 
+     * @param color
+     * @return String
+     */
     public static String getHexFromColor(Color color) {
         return String.format("#%06X", (0xFFFFFF & color.getRGB()));
     }
 
+    /**
+     * Method to insert a color symbol into the color symbol map
+     * 
+     * @param key
+     * @param colorSymbol
+     */
     public static void insertcolorSymbolMap(int key, ColorSymbol colorSymbol) {
         colorSymbolMap.put(key, colorSymbol);
     }
 
+    /**
+     * Method to set the color field text
+     * 
+     * @param text
+     */
     public static void insertTextField(String text) {
         ColorWheel.setColorFieldText(text);
     }
