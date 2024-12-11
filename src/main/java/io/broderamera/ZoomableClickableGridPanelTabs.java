@@ -12,11 +12,18 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 /**
- *  Fix assignment on line 1215 in createCloseTabButton - the index that 
+ *  Fix assignment on line 125 in createCloseTabButton - the index that 
  *  the close operation is performed on becomes incorrect when tabs are removed 
  *  and added again 
+ * 
+ *  Fix X and + icons
  */
 
+/**
+ * Represents a tabbed pane that contains clickable grid panels.
+ * 
+ * @author Olofur
+ */
 public class ZoomableClickableGridPanelTabs extends JTabbedPane{    
     private static final String ADD_TAB_TITLE = "Adding";
     private static final String UNNAMED_TAB_TITLE = "unnamed";
@@ -29,6 +36,9 @@ public class ZoomableClickableGridPanelTabs extends JTabbedPane{
     private static List<String> tabNames;
     private static HashMap<Integer, ZoomableClickableGridPanel> zoomableClickableGridPanels;
     
+    /**
+     * Creates a new instance of ZoomableClickableGridPanelTabs.
+     */
     public ZoomableClickableGridPanelTabs() {
         tabIndex = 0;
         tabNames = new ArrayList<>();
@@ -60,11 +70,16 @@ public class ZoomableClickableGridPanelTabs extends JTabbedPane{
         });
     }
 
-    // To be implemented
+    /** 
+     * Add start tab 
+     */
     private void addStartTab() {
-        addTab(String.valueOf(getTabCount()), null);
         // Tab name label
         JLabel label = new JLabel("Welcome");
+        // Welcome panel
+        JPanel panel = new JPanel();
+        panel.setPreferredSize(new Dimension(1000, 1000));
+        addTab(String.valueOf(getTabCount()), panel);
         // Close button
         JButton closeButton = createCloseTabButton(tabIndex);
         // Tab component
@@ -109,6 +124,7 @@ public class ZoomableClickableGridPanelTabs extends JTabbedPane{
     private JButton createAddTabButton() {
         JButton addButton = new JButton();
         addButton.setIcon(addIcon);
+        addButton.setPreferredSize(new Dimension(20, 20));
         addButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
