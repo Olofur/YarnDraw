@@ -9,21 +9,38 @@ import java.awt.Dimension;
 import java.awt.event.ActionListener;
 
 /**
- * The main frame of the application
+ * The main frame of the application. Contains the color wheel, palette and
+ * grid panels.
+ * 
  * @version 1.0
  * @author Olofur
  */
 public class MainFrame {
     int width; 
 
-    public MainFrame(int x, int y) {
-        init(x, y);
-    }
-
+    /**
+     * Default constructor
+     */
     public MainFrame() {
         init(100, 100);
     }
 
+    /**
+     * Grid constructor, which sets the dimensions of the grid
+     * 
+     * @param x
+     * @param y
+     */
+    public MainFrame(int x, int y) {
+        init(x, y);
+    }
+
+    /**
+     * Initialize the main frame with the given dimensions
+     * 
+     * @param x
+     * @param y
+     */
     public void init(int x, int y) {
         width = 350;
 
@@ -33,7 +50,7 @@ public class MainFrame {
         JSplitPane menuPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         JSplitPane optionPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
 
-        // Create color palette panel
+        // Create color palette panel with control panel
         Palette palette = new Palette(width);
         ControlPanel controlPanel = new ControlPanel(width);
         optionPane.setTopComponent(palette);
