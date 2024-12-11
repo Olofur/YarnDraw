@@ -12,6 +12,8 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 
 /**
+ * Represents a color wheel that is used to select a color for a color symbol.
+ * 
  * @author Olofur
  */
 public class ColorWheel extends JPanel {
@@ -22,10 +24,18 @@ public class ColorWheel extends JPanel {
     private BufferedImage colorWheelImage;
     private static JTextField colorField;
 
+    /**
+     * Constructs a new ColorWheel object with a default diameter of 200.
+     */
     public ColorWheel() {
         this(200);
     }
 
+    /**
+     * Constructs a new ColorWheel object with the specified diameter.
+     *
+     * @param diameter The diameter of the color wheel in pixels.
+     */
     public ColorWheel(int diameter) {
         radius = diameter / 2;
     
@@ -67,6 +77,10 @@ public class ColorWheel extends JPanel {
         add(colorField, BorderLayout.SOUTH);
     }
 
+    /**
+     * A mouse listener that is used to select a color from the color wheel and
+     * display it in the color field.
+     */
     private class ColorWheelMouseListener extends MouseAdapter {
         @Override
         public void mouseClicked(MouseEvent e) {
@@ -79,10 +93,20 @@ public class ColorWheel extends JPanel {
         }
     }
 
+    /**
+     * Returns the text in the color field.
+     * 
+     * @return String
+     */
     public static String getColorFieldText() {
         return colorField.getText();
     }
 
+    /**
+     * Sets the text in the color field.
+     * 
+     * @param text
+     */
     public static void setColorFieldText(String text) {
         colorField.setText(text);
     }
