@@ -22,9 +22,16 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 
+
 /**
-* @author Olofur
-*/
+ * Represents the control panel for the application, which contains buttons for
+ * different actions, including color and symbol representation, fill in and
+ * reset the grid, save, load and print patterns as well as to undo, and redo
+ * actions. The representation buttons relate to the same property, whereas
+ * the other buttons perform different actions.
+ * 
+ * @author Olofur
+ */
 public class ControlPanel extends JPanel {
     private static boolean color;
     private static boolean symbol;
@@ -32,10 +39,18 @@ public class ControlPanel extends JPanel {
     
     private String directoryPath = System.getProperty("user.dir");
     
+    /**
+     * Default constructor for the control panel with a width of 200
+     */
     public ControlPanel() {
         this(200);
     }
     
+    /**
+     * Constructor for the control panel with a specified width
+     * 
+     * @param width The width of the control panel
+     */
     public ControlPanel(int width) {
         color = true;
         symbol = false;
@@ -50,7 +65,7 @@ public class ControlPanel extends JPanel {
         JButton buttonE = new JButton("Reset");
         JButton buttonF = new JButton("Save");
         JButton buttonG = new JButton("Load");
-        // JButton buttonH = new JButton("Print");
+        JButton buttonH = new JButton("Print");
         // JButton buttonI = new JButton("Undo");
         // JButton buttonJ = new JButton("Redo");
         
@@ -134,6 +149,13 @@ public class ControlPanel extends JPanel {
                 loadPatternFromFile();
             }
         });
+
+        buttonH.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                printPattern();
+            }
+        });
         
         buttonA.setBackground(Color.LIGHT_GRAY);
         buttonB.setBackground(Color.WHITE);
@@ -142,6 +164,9 @@ public class ControlPanel extends JPanel {
         buttonE.setBackground(Color.WHITE);
         buttonF.setBackground(Color.WHITE);
         buttonG.setBackground(Color.WHITE);
+        buttonH.setBackground(Color.WHITE);
+        // buttonI.setBackground(Color.WHITE);
+        // buttonJ.setBackground(Color.WHITE);
         
         add(buttonA);
         add(buttonB);
@@ -150,13 +175,16 @@ public class ControlPanel extends JPanel {
         add(buttonE);
         add(buttonF);        
         add(buttonG);
-        // add(buttonH);  
+        add(buttonH);  
         // add(buttonI);
         // add(buttonJ);
         
         setLayout(new GridLayout(3, 3, 5, 10));
     }
     
+    /**
+     * Method to swap the color of the active color panel
+     */
     private void swapColor() {
         JFrame swapColorFrame = new JFrame();
         
@@ -208,6 +236,9 @@ public class ControlPanel extends JPanel {
         swapColorFrame.setVisible(true);
     }
     
+    /**
+     * Method to save the current active pattern to a file
+     */
     public void savePatternToFile() {
         String filename = JOptionPane.showInputDialog("Enter a filename:");
 
@@ -256,6 +287,9 @@ public class ControlPanel extends JPanel {
         System.out.println("Saved to " + filename);
     }
     
+    /**
+     * Method to load a pattern from a file
+     */
     public void loadPatternFromFile() {
         String filename = getLoadFile();
         if (filename == null) {
@@ -327,6 +361,11 @@ public class ControlPanel extends JPanel {
         }
     }
     
+    /**
+     * Method to get the path of the file to load
+     * 
+     * @return String
+     */
     private String getLoadFile() {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Select a file to load");
@@ -363,27 +402,58 @@ public class ControlPanel extends JPanel {
         }
         return null;
     }
-    
+
+    /**
+     * Method to print the current pattern to a printer
+     */
+    private void printPattern() {
+        return;
+    }
+
+    /**
+     * Method to flip the display color boolean
+     */
     public static void flipDisplayColor() {
         ControlPanel.color = !ControlPanel.color;
     }
     
+    /**
+     * Method to get the display color boolean
+     * 
+     * @return boolean
+     */
     public static boolean displayColor() {
         return color;
     }
     
+    /**
+     * Method to flip the display symbol boolean
+     */
     public static void flipDisplaySymbol() {
         ControlPanel.symbol = !ControlPanel.symbol;
     }
     
+    /**
+     * Method to get the display symbol boolean
+     * 
+     * @return boolean
+     */
     public static boolean displaySymbol() {
         return symbol;
     }
     
+    /**
+     * Method to flip the fill in active boolean
+     */
     public static void flipFillInActive() {
         ControlPanel.fillInActive = !ControlPanel.fillInActive;
     }
     
+    /**
+     * Method to get the fill in active boolean
+     * 
+     * @return boolean
+     */
     public static boolean isFillInActive() {
         return fillInActive;
     }
