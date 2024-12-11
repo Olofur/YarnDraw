@@ -51,7 +51,8 @@ public class ColorPanel extends JPanel {
     }
 
     /**
-     * Sets the three main properties of the panel: key, color, and symbol.
+     * Constructor that sets the three main properties of the panel: key,
+     * color, and symbol.
      * 
      * @param key
      * @param color
